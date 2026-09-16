@@ -1,0 +1,67 @@
+<div class="page-stack">
+  <div class="page-title">
+    <h2>Histórico de Acessos</h2>
+    <p>Consulte as permanências encerradas, com entrada, saída e tempo no estacionamento</p>
+  </div>
+  <section class="card">
+    <div class="card-body">
+      <div class="field">
+        <label for="history-search">Buscar</label>
+        <input
+          id="history-search"
+          class="input"
+          [(ngModel)]="search"
+          placeholder="Placa ou proprietário"
+        />
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Placa</th>
+            <th>Modelo</th>
+            <th>Proprietário</th>
+            <th>Entrada</th>
+            <th>Saída</th>
+            <th>Tempo de permanência</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of filtered; track r.id) {
+            <tr>
+              <td>
+                <strong>{{ r.plate }}</strong>
+              </td>
+              <td>{{ r.model || 'Não informado' }}</td>
+              <td>{{ r.owner }}</td>
+              <td>{{ r.entry | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ r.exit | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                <span class="badge">{{ duration(r) }}</span>
+              </td>
+              <td>
+                @if (r.ownerDocument) {
+                  <a
+                    class="btn btn-secondary"
+                    routerLink="/pessoas"
+                    [queryParams]="{ proprietario: r.ownerDocument }"
+                    [attr.aria-label]="'Ver cadastro de ' + r.owner"
+                  >
+                    Ver proprietário
+                  </a>
+                } @else {
+                  <span class="muted">Cadastro não vinculado</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (!filtered.length) {
+      <div class="empty">Nenhuma permanência encerrada encontrada</div>
+    }
+  </section>
+</div>
