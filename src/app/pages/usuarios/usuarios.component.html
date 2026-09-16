@@ -1,0 +1,165 @@
+<div class="page-stack">
+  <div class="toolbar">
+    <div class="page-title">
+      <h2>Usuários do Sistema</h2>
+      <p>Gerencie administradores e porteiros</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreate()">＋ Criar Usuário</button>
+  </div>
+  <section class="card">
+    <div class="card-body">
+      <input class="input" [(ngModel)]="search" placeholder="Buscar usuário..." />
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Usuário</th>
+            <th>E-mail</th>
+            <th>Nível</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of filtered; track u.username) {
+            <tr>
+              <td>
+                <strong>{{ u.name }}</strong>
+              </td>
+              <td>{{ u.username }}</td>
+              <td>{{ u.email }}</td>
+              <td>
+                <span class="badge badge-blue">{{ u.role }}</span>
+              </td>
+              <td>
+                <span class="badge" [class.badge-success]="u.status === 'Ativo'">{{
+                  u.status
+                }}</span>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="edit(u)"
+                  [attr.aria-label]="'Editar usuário ' + u.name"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  (click)="pendingDelete = u"
+                  [attr.aria-label]="'Excluir usuário ' + u.name"
+                >
+                  Excluir
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (!filtered.length) {
+      <div class="empty">Nenhum usuário encontrado</div>
+    }
+  </section>
+  <div class="grid grid-2">
+    <article class="card stat">
+      <small>Administradores</small><strong>{{ administrators }}</strong>
+    </article>
+    <article class="card stat">
+      <small>Porteiros</small><strong>{{ gatekeepers }}</strong>
+    </article>
+  </div>
+</div>
+@if (modal) {
+  <div class="modal-backdrop">
+    <section class="modal">
+      <div class="card-header toolbar">
+        <div>
+          <h3>{{ editingUser ? 'Editar Usuário' : 'Criar Usuário do Sistema' }}</h3>
+          <p>
+            {{
+              editingUser
+                ? 'Atualize as informações do usuário'
+                : 'Preencha as informações do novo usuário'
+            }}
+          </p>
+        </div>
+        <button class="btn btn-secondary" (click)="closeModal()" aria-label="Fechar formulário">
+          ×
+        </button>
+      </div>
+      <form class="card-body grid" (ngSubmit)="save()">
+        <div class="field">
+          <label>Nome completo *</label><input class="input" name="name" [(ngModel)]="form.name" />
+        </div>
+        <div class="grid grid-2">
+          <div class="field">
+            <label>Nome de usuário *</label
+            ><input class="input" name="username" [(ngModel)]="form.username" />
+          </div>
+          <div class="field">
+            <label>E-mail *</label
+            ><input class="input" type="email" name="email" [(ngModel)]="form.email" />
+          </div>
+          @if (!editingUser) {
+            <div class="field">
+              <label>Senha *</label
+              ><input
+                class="input"
+                type="password"
+                name="password"
+                [(ngModel)]="form.password"
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+          }
+          <div class="field">
+            <label>Nível de acesso</label
+            ><select class="input" name="role" [(ngModel)]="form.role">
+              <option>Administrador</option>
+              <option>Porteiro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select class="input" name="status" [(ngModel)]="form.status">
+              <option>Ativo</option>
+              <option>Inativo</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+          <button class="btn btn-primary">
+            {{ editingUser ? 'Salvar alterações' : 'Criar Usuário' }}
+          </button>
+        </div>
+        @if (error) {
+          <p role="alert">{{ error }}</p>
+        }
+      </form>
+    </section>
+  </div>
+}
+@if (pendingDelete; as user) {
+  <div class="modal-backdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-user-title">
+      <div class="card-header"><h3 id="delete-user-title">Excluir usuário</h3></div>
+      <div class="card-body">
+        <p>Deseja excluir o usuário {{ user.name }} ({{ user.username }})?</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="pendingDelete = null">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+            Confirmar exclusão
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+}
