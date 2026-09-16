@@ -1,0 +1,60 @@
+<div class="page-stack">
+  <div class="page-title">
+    <h2>Registrar Saída</h2>
+    <p>Localize o veículo estacionado e confirme sua saída</p>
+  </div>
+  <section class="card">
+    <div class="card-body field">
+      <label for="exit-search">Buscar por placa, proprietário, marca ou modelo</label>
+      <input
+        id="exit-search"
+        class="input"
+        [(ngModel)]="search"
+        placeholder="Ex.: ABC-1234, Maria, Honda ou Civic"
+      />
+    </div>
+  </section>
+  @if (confirmed) {
+    <div class="card card-body">
+      <span class="badge badge-success"
+        >✓ Saída do veículo {{ confirmed }} registrada com sucesso.</span
+      >
+    </div>
+  }
+  <section class="card">
+    <div class="card-header"><h3>Veículos no estacionamento</h3></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Placa</th>
+            <th>Proprietário</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Entrada</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of filtered; track v.plate) {
+            <tr>
+              <td>
+                <strong>{{ v.plate }}</strong>
+              </td>
+              <td>{{ v.owner }}</td>
+              <td>{{ v.brand }}</td>
+              <td>{{ v.model }}</td>
+              <td>{{ v.entryTime }}</td>
+              <td>
+                <button class="btn btn-danger" (click)="exit(v.plate)">Registrar Saída</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (!filtered.length) {
+      <div class="empty">Nenhum veículo encontrado</div>
+    }
+  </section>
+</div>
