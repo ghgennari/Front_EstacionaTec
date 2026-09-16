@@ -1,0 +1,124 @@
+.camera-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.camera-panel {
+  overflow: hidden;
+}
+.camera-view {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: linear-gradient(135deg, #1f2937, #374151, #111827);
+  color: #9ca3af;
+  display: grid;
+  place-items: center;
+}
+.camera-label,
+.camera-time {
+  position: absolute;
+  top: 16px;
+  padding: 8px 12px;
+  background: #0009;
+  border-radius: 8px;
+  color: white;
+  font-size: 12px;
+  z-index: 1;
+}
+.camera-label {
+  left: 16px;
+}
+.camera-time {
+  right: 16px;
+}
+.camera-placeholder {
+  text-align: center;
+}
+.camera-placeholder svg {
+  width: 80px;
+  height: 80px;
+  color: #6b7280;
+}
+.detection-zone {
+  position: absolute;
+  inset: 33% 25%;
+  border: 2px dashed #3b82f680;
+  border-radius: 8px;
+  pointer-events: none;
+}
+.camera-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px;
+  background: #f9fafb;
+}
+.camera-controls button:last-child {
+  margin-left: auto;
+}
+.camera-panel:fullscreen {
+  display: flex;
+  flex-direction: column;
+  background: #111827;
+}
+.camera-panel:fullscreen .camera-view {
+  flex: 1;
+}
+.event {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.event p {
+  font-size: 14px;
+}
+.events {
+  max-height: 600px;
+  overflow: auto;
+}
+.details {
+  border: 0;
+  background: none;
+  color: #2563eb;
+  margin-left: 12px;
+}
+.summary {
+  padding: 16px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+}
+.summary strong {
+  display: block;
+  font-size: 22px;
+  margin-top: 8px;
+}
+.authorized {
+  color: #15803d;
+  background: #f0fdf4;
+}
+.denied {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+@media (max-width: 1100px) {
+  .camera-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .camera-time {
+    top: auto;
+    bottom: 8px;
+  }
+  .camera-placeholder svg {
+    width: 40px;
+    height: 40px;
+  }
+  .camera-placeholder small {
+    font-size: 10px;
+  }
+}
