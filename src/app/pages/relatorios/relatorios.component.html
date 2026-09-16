@@ -1,0 +1,46 @@
+<div class="page-stack">
+  <section class="card">
+    <div class="card-header">
+      <h3>Relatórios Recentes</h3>
+      <p>Histórico de relatórios gerados</p>
+    </div>
+    @for (report of recentReports; track report.name) {
+      <div class="card-header toolbar">
+        <div>
+          <strong>{{ report.name }}</strong>
+          <p>Gerado em {{ report.date }} • {{ report.size }} • PDF</p>
+        </div>
+        <button type="button" class="btn btn-primary" (click)="download()">Baixar</button>
+      </div>
+    }
+  </section>
+  <section class="card">
+    <div class="card-header"><h3>Relatório Personalizado</h3></div>
+    <form class="card-body grid" (ngSubmit)="generate()">
+      <div class="grid grid-2">
+        <div class="field">
+          <label>Data inicial</label
+          ><input class="input" type="date" name="start" [(ngModel)]="start" />
+        </div>
+        <div class="field">
+          <label>Data final</label><input class="input" type="date" name="end" [(ngModel)]="end" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Tipo de relatório</label
+        ><select class="input" name="type" [(ngModel)]="type">
+          <option>Entradas e Saídas</option>
+          <option>Ocupação por Período</option>
+          <option>Veículos por Tipo de Usuário</option>
+          <option>Tempo Médio de Permanência</option>
+        </select>
+      </div>
+      <button class="btn btn-primary">Gerar Relatório Personalizado</button>
+    </form>
+  </section>
+  @if (message) {
+    <section class="card card-body">
+      <p role="status">{{ message }}</p>
+    </section>
+  }
+</div>
