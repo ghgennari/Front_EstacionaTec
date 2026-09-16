@@ -1,0 +1,201 @@
+<div class="page-stack">
+  <section class="card card-body">
+    <h3>Filtros</h3>
+    <div class="grid grid-4">
+      <div class="field">
+        <label for="capture-plate">Placa</label
+        ><input
+          id="capture-plate"
+          class="input"
+          placeholder="ABC-1234"
+          [(ngModel)]="searchPlate"
+          (ngModelChange)="resetPage()"
+        />
+      </div>
+      <div class="field">
+        <label for="capture-date">Data</label
+        ><input
+          id="capture-date"
+          class="input"
+          type="date"
+          [(ngModel)]="dateFilter"
+          (ngModelChange)="resetPage()"
+        />
+      </div>
+      <div class="field">
+        <label for="capture-type">Tipo de Acesso</label
+        ><select
+          id="capture-type"
+          class="input"
+          [(ngModel)]="accessType"
+          (ngModelChange)="resetPage()"
+        >
+          <option value="">Todos</option>
+          <option>Entrada</option>
+          <option>Saída</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="capture-status">Status</label
+        ><select
+          id="capture-status"
+          class="input"
+          [(ngModel)]="accessStatus"
+          (ngModelChange)="resetPage()"
+        >
+          <option value="">Todos</option>
+          <option>Autorizado</option>
+          <option>Negado</option>
+        </select>
+      </div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="card-header">
+      <h3>Histórico de Imagens Capturadas</h3>
+      <p>Todas as capturas de placa registradas no sistema • dados demonstrativos</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Miniatura</th>
+            <th>Placa</th>
+            <th>Proprietário</th>
+            <th>Data/Hora</th>
+            <th>Tipo</th>
+            <th>Status</th>
+            <th>Arquivo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (image of visibleImages; track image.id) {
+            <tr>
+              <td><span class="thumbnail" aria-label="Imagem demonstrativa">▧</span></td>
+              <td>
+                <strong>{{ image.plate }}</strong>
+              </td>
+              <td>{{ image.owner }}</td>
+              <td>{{ dateTime(image) }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-blue]="image.type === 'Entrada'"
+                  [class.badge-orange]="image.type === 'Saída'"
+                  >{{ image.type }}</span
+                >
+              </td>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-success]="image.status === 'Autorizado'"
+                  [class.denied]="image.status === 'Negado'"
+                  >{{ image.status }}</span
+                >
+              </td>
+              <td class="muted">{{ image.fileName }}</td>
+              <td>
+                <div class="actions">
+                  <button class="btn btn-secondary" (click)="selectedImage = image; message = ''">
+                    Visualizar</button
+                  ><button class="btn btn-secondary" (click)="download(image)">Baixar</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (!filtered.length) {
+      <p class="empty">Nenhuma imagem encontrada</p>
+    } @else {
+      <div class="card-body toolbar">
+        <span class="muted"
+          >Exibindo {{ visibleImages.length }} de {{ filtered.length }} imagens filtradas ({{
+            images.length
+          }}
+          no total)</span
+        >
+        <div class="actions">
+          <button class="btn btn-secondary" (click)="changePage(-1)" [disabled]="page === 1">
+            Anterior</button
+          ><span>Página {{ page }} de {{ totalPages }}</span
+          ><button
+            class="btn btn-secondary"
+            (click)="changePage(1)"
+            [disabled]="page === totalPages"
+          >
+            Próximo
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+  @if (!selectedImage) {
+    <p role="status">{{ message }}</p>
+  }
+  @if (selectedImage; as image) {
+    <div class="modal-backdrop" (keydown.escape)="selectedImage = null">
+      <section
+        class="modal image-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="image-title"
+        tabindex="-1"
+      >
+        <div class="card-header toolbar">
+          <div>
+            <h3 id="image-title">Visualização da Imagem</h3>
+            <p>{{ image.fileName }}</p>
+          </div>
+          <button
+            class="btn btn-secondary"
+            (click)="selectedImage = null"
+            aria-label="Fechar imagem"
+          >
+            ×
+          </button>
+        </div>
+        <div class="card-body page-stack">
+          <div class="preview">
+            <span>▧</span>
+            <p>Imagem Capturada</p>
+            <small>Arquivo demonstrativo • imagem não fornecida no protótipo</small>
+          </div>
+          <dl class="grid grid-2">
+            <div>
+              <dt>Placa</dt>
+              <dd>{{ image.plate }}</dd>
+            </div>
+            <div>
+              <dt>Proprietário</dt>
+              <dd>{{ image.owner }}</dd>
+            </div>
+            <div>
+              <dt>Data/Hora</dt>
+              <dd>{{ dateTime(image) }}</dd>
+            </div>
+            <div>
+              <dt>Tipo de Acesso</dt>
+              <dd>{{ image.type }}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>{{ image.status }}</dd>
+            </div>
+            <div>
+              <dt>Caminho do Arquivo</dt>
+              <dd>{{ image.imagePath }}</dd>
+            </div>
+          </dl>
+          <p role="status">{{ message }}</p>
+          <div class="actions">
+            <button class="btn btn-primary" (click)="download(image)">Baixar Imagem</button
+            ><button class="btn btn-secondary" (click)="selectedImage = null">Fechar</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  }
+</div>

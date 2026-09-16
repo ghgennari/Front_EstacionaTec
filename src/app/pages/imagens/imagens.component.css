@@ -1,0 +1,54 @@
+.thumbnail,
+.preview {
+  display: grid;
+  place-content: center;
+  text-align: center;
+  color: #9ca3af;
+  background: linear-gradient(135deg, #374151, #111827);
+  border-radius: 8px;
+}
+.thumbnail {
+  width: 48px;
+  height: 48px;
+  font-size: 26px;
+}
+.preview {
+  aspect-ratio: 16/9;
+  padding: 16px;
+}
+.preview > span {
+  font-size: 64px;
+}
+.denied {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.image-modal {
+  width: min(900px, 100%);
+}
+dl {
+  margin: 0;
+}
+dl > div {
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+dt {
+  color: #6b7280;
+  font-size: 13px;
+}
+dd {
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
