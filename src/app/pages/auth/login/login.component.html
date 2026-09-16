@@ -1,0 +1,45 @@
+<div class="auth-page">
+  <div class="auth-wrap">
+    <section class="auth-card">
+      <img class="brand-logo" src="assets/Logo2.png" alt="Logo EstacionaTec" />
+      <h1>EstacionaTec</h1>
+      <p>Sistema de Controle de Acesso</p>
+      <form (ngSubmit)="login()">
+        <div class="field">
+          <label for="email">E-mail ou Usuário</label
+          ><input
+            class="input"
+            id="email"
+            name="email"
+            [(ngModel)]="email"
+            placeholder="Digite seu e-mail ou usuário"
+          />
+        </div>
+        <div class="field">
+          <label for="password">Senha</label>
+          <div class="password">
+            <input
+              class="input"
+              id="password"
+              name="password"
+              [(ngModel)]="password"
+              [type]="showPassword ? 'text' : 'password'"
+              placeholder="Digite sua senha"
+            /><button type="button" (click)="showPassword = !showPassword">
+              {{ showPassword ? 'Ocultar' : 'Exibir' }}
+            </button>
+          </div>
+        </div>
+        @if (error) {
+          <p class="error">{{ error }}</p>
+        }
+        <a routerLink="/recuperar-senha">Esqueceu a senha?</a
+        ><button class="btn btn-primary" type="submit">Entrar</button>
+      </form>
+    </section>
+    <div class="demo">
+      <strong>Credenciais de demonstração:</strong><span>• Usuário: admin&#64;edu.br</span
+      ><span>• Senha: admin123</span>
+    </div>
+  </div>
+</div>
