@@ -1,0 +1,170 @@
+<div class="page-stack">
+  <div class="toolbar">
+    <div class="page-title">
+      <h2>Pessoas</h2>
+      <p>Gerencie alunos, professores, funcionários e visitantes</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreate()">＋ Cadastrar Pessoa</button>
+  </div>
+  @if (ownerDocument) {
+    <section class="card" aria-labelledby="owner-details-title">
+      <div class="card-header toolbar">
+        <h3 id="owner-details-title">Cadastro do proprietário</h3>
+        <a class="btn btn-secondary" routerLink="/historico">Voltar ao histórico</a>
+      </div>
+      <div class="card-body">
+        @if (selectedOwner; as person) {
+          <dl class="grid grid-2">
+            <div>
+              <dt>Nome</dt>
+              <dd>{{ person.name }}</dd>
+            </div>
+            <div>
+              <dt>CPF/Documento</dt>
+              <dd>{{ person.document }}</dd>
+            </div>
+            <div>
+              <dt>Tipo</dt>
+              <dd>{{ person.type }}</dd>
+            </div>
+            <div>
+              <dt>E-mail</dt>
+              <dd>{{ person.email || 'Não informado' }}</dd>
+            </div>
+            <div>
+              <dt>Telefone</dt>
+              <dd>{{ person.phone || 'Não informado' }}</dd>
+            </div>
+          </dl>
+        } @else {
+          <p role="status">O cadastro deste proprietário não foi encontrado.</p>
+        }
+      </div>
+    </section>
+  }
+  <section class="card">
+    <div class="card-body">
+      <input
+        class="input"
+        [(ngModel)]="search"
+        placeholder="Buscar por nome, documento ou e-mail..."
+      />
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Documento</th>
+            <th>Contato</th>
+            <th>Tipo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of filtered; track p.document) {
+            <tr>
+              <td>
+                <strong>{{ p.name }}</strong>
+              </td>
+              <td>{{ p.document }}</td>
+              <td>
+                {{ p.email }}<br /><span class="muted">{{ p.phone }}</span>
+              </td>
+              <td>
+                <span class="badge badge-blue">{{ p.type }}</span>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="edit(p)"
+                  [attr.aria-label]="'Editar pessoa ' + p.name"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  (click)="requestDelete(p)"
+                  [attr.aria-label]="'Excluir pessoa ' + p.name"
+                >
+                  Excluir
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+@if (modal) {
+  <div class="modal-backdrop">
+    <section class="modal">
+      <div class="card-header toolbar">
+        <div>
+          <h3>{{ editingPerson ? 'Editar Pessoa' : 'Cadastrar Pessoa' }}</h3>
+          <p>Preencha os dados pessoais</p>
+        </div>
+        <button class="btn btn-secondary" (click)="closeModal()" aria-label="Fechar formulário">
+          ×
+        </button>
+      </div>
+      <form class="card-body grid" (ngSubmit)="save()">
+        <div class="field">
+          <label>Nome completo *</label><input class="input" name="name" [(ngModel)]="form.name" />
+        </div>
+        <div class="grid grid-2">
+          <div class="field">
+            <label>CPF/Documento *</label
+            ><input class="input" name="document" [(ngModel)]="form.document" />
+          </div>
+          <div class="field">
+            <label>Tipo</label
+            ><select class="input" name="type" [(ngModel)]="form.type">
+              <option>Aluno</option>
+              <option>Professor</option>
+              <option>Funcionário</option>
+              <option>Visitante</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>E-mail</label><input class="input" name="email" [(ngModel)]="form.email" />
+          </div>
+          <div class="field">
+            <label>Telefone</label><input class="input" name="phone" [(ngModel)]="form.phone" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button
+          ><button class="btn btn-primary">Salvar Pessoa</button>
+        </div>
+        @if (error) {
+          <p role="alert">{{ error }}</p>
+        }
+      </form>
+    </section>
+  </div>
+}
+@if (pendingDelete; as person) {
+  <div class="modal-backdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-person-title">
+      <div class="card-header"><h3 id="delete-person-title">Excluir pessoa</h3></div>
+      <div class="card-body">
+        <p>Deseja excluir o cadastro de {{ person.name }} ({{ person.document }})?</p>
+        @if (deleteError) {
+          <p role="alert">{{ deleteError }}</p>
+        }
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="pendingDelete = null">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+            Confirmar exclusão
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+}
