@@ -1,0 +1,138 @@
+<div class="page-stack">
+  <div class="toolbar">
+    <div class="page-title">
+      <h2>Veículos</h2>
+      <p>Gerencie os veículos cadastrados</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreate()">＋ Cadastrar Veículo</button>
+  </div>
+  <section class="card">
+    <div class="card-body">
+      <input
+        class="input"
+        [(ngModel)]="search"
+        placeholder="Buscar por placa, modelo ou proprietário..."
+      />
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Placa</th>
+            <th>Modelo</th>
+            <th>Cor</th>
+            <th>Proprietário</th>
+            <th>Categoria do proprietário</th>
+            <th>Tipo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of filtered; track v.id) {
+            <tr>
+              <td>{{ v.id }}</td>
+              <td>
+                <strong>{{ v.plate }}</strong>
+              </td>
+              <td>{{ v.model }}</td>
+              <td>{{ v.color }}</td>
+              <td>{{ v.owner }}</td>
+              <td>
+                <span class="badge">{{ category(v) }}</span>
+              </td>
+              <td>
+                <span class="badge badge-blue">{{ v.type }}</span>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="edit(v)"
+                  [attr.aria-label]="'Editar veículo ' + v.plate"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  (click)="pendingDelete = v"
+                  [attr.aria-label]="'Excluir veículo ' + v.plate"
+                >
+                  Excluir
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+@if (modal) {
+  <div class="modal-backdrop">
+    <section class="modal">
+      <div class="card-header toolbar">
+        <div>
+          <h3>{{ editingId !== null ? 'Editar Veículo' : 'Cadastrar Veículo' }}</h3>
+          <p>
+            {{
+              editingId !== null
+                ? 'Atualize as informações do veículo'
+                : 'Preencha as informações do novo veículo'
+            }}
+          </p>
+        </div>
+        <button class="btn btn-secondary" (click)="closeModal()" aria-label="Fechar formulário">
+          ×
+        </button>
+      </div>
+      <form class="card-body grid" (ngSubmit)="save()">
+        <div class="grid grid-2">
+          <div class="field">
+            <label>Placa *</label><input class="input" name="plate" [(ngModel)]="form.plate" />
+          </div>
+          <div class="field">
+            <label>Tipo</label
+            ><select class="input" name="type" [(ngModel)]="form.type">
+              <option>Carro</option>
+              <option>Moto</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Modelo</label><input class="input" name="model" [(ngModel)]="form.model" />
+          </div>
+          <div class="field">
+            <label>Cor</label><input class="input" name="color" [(ngModel)]="form.color" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Proprietário *</label><input class="input" name="owner" [(ngModel)]="form.owner" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button
+          ><button class="btn btn-primary">Salvar Veículo</button>
+        </div>
+      </form>
+    </section>
+  </div>
+}
+@if (pendingDelete; as vehicle) {
+  <div class="modal-backdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+      <div class="card-header"><h3 id="delete-title">Excluir veículo</h3></div>
+      <div class="card-body">
+        <p>Deseja excluir o veículo {{ vehicle.plate }} de {{ vehicle.owner }}?</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="pendingDelete = null">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+            Confirmar exclusão
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+}
