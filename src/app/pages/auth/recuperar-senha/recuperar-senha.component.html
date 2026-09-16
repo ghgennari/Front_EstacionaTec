@@ -1,0 +1,36 @@
+<div class="auth-page">
+  <div class="auth-wrap">
+    <section class="auth-card">
+      @if (!sent) {
+        <div class="logo">✉</div>
+        <h1>Esqueceu a Senha?</h1>
+        <p>Digite seu e-mail para receber instruções de recuperação.</p>
+        <form (ngSubmit)="send()">
+          <div class="field">
+            <label>E-mail</label
+            ><input
+              class="input"
+              name="email"
+              type="email"
+              [(ngModel)]="email"
+              placeholder="seu.email@edu.br"
+            />
+          </div>
+          @if (error) {
+            <p class="error">{{ error }}</p>
+          }
+          <button class="btn btn-primary">Enviar E-mail de Recuperação</button
+          ><a routerLink="/login">← Voltar ao Login</a>
+        </form>
+      } @else {
+        <div class="logo success">✓</div>
+        <h1>E-mail enviado!</h1>
+        <p>
+          As instruções foram enviadas para <strong>{{ email }}</strong
+          >. O link expira em 24 horas.
+        </p>
+        <a class="btn btn-primary" routerLink="/login">Voltar ao Login</a>
+      }
+    </section>
+  </div>
+</div>
