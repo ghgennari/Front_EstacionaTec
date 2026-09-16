@@ -1,0 +1,10 @@
+<header>
+  <button type="button" class="btn btn-secondary" (click)="toggleSidebar.emit()" [attr.aria-expanded]="sidebarOpen" aria-label="Alternar menu lateral"
+  >
+    {{ sidebarOpen ? '×' : '☰' }}
+  </button>
+  <div>
+    <h2>{{ title }}</h2>
+    <p>{{ date }}</p>
+  </div>
+</header>
