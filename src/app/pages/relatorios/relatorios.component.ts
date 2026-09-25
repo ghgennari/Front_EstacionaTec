@@ -1,26 +1,67 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ParkingRegistryService, Report } from '../../core/services/parking-registry.service';
 @Component({
   selector: 'app-relatorios',
   standalone: false,
   templateUrl: './relatorios.component.html',
 })
-export class RelatoriosComponent {
+export class RelatoriosComponent implements OnInit {
+  private readonly api = inject(ParkingRegistryService);
+  private readonly cdr = inject(ChangeDetectorRef);
   start = '';
   end = '';
   type = 'Entradas e Saídas';
-  readonly recentReports = [
-    { name: 'Relatório Diário - 05/05/2026', date: '05/05/2026 18:00', size: '245 KB' },
-    { name: 'Relatório Semanal - Semana 18', date: '04/05/2026 23:59', size: '1.2 MB' },
-    { name: 'Relatório Mensal - Abril 2026', date: '01/05/2026 00:00', size: '3.5 MB' },
-  ];
+  plate = '';
+  eventType = '';
+  userId: number | null = null;
+  recentReports: Report[] = [];
   message = '';
-  generate() {
-    this.message =
-      !this.start || !this.end || this.start > this.end
-        ? 'Informe um período válido para o relatório.'
-        : 'A geração de relatórios estará disponível após a integração com o servidor.';
+  busy = false;
+  async ngOnInit(): Promise<void> {
+    try {
+      this.recentReports = await this.api.request<Report[]>('GET', '/relatorios');
+    } catch (error) {
+      this.message = this.api.error(error);
+    } finally {
+      this.cdr.markForCheck();
+    }
   }
-  download(): void {
-    this.message = 'Este relatório é demonstrativo; o arquivo PDF ainda não está disponível.';
+  async generate(): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
+    this.message = '';
+    try {
+      await this.api.request('POST', '/relatorios', {
+        start: this.start,
+        end: this.end,
+        type: this.type,
+        plate: this.plate,
+        userId: this.userId,
+        eventType: this.eventType,
+      });
+      this.message = 'Relatório CSV gerado com os dados do banco.';
+      await this.ngOnInit();
+    } catch (error) {
+      this.message = this.api.error(error);
+    } finally {
+      this.busy = false;
+      this.cdr.markForCheck();
+    }
+  }
+  async download(report: Report): Promise<void> {
+    if (!report.available) {
+      this.message = 'Este relatório demonstrativo não possui arquivo.';
+      return;
+    }
+    try {
+      await this.api.download(
+        '/relatorios/' + report.id + '/arquivo',
+        'relatorio-' + report.id + '.csv',
+      );
+    } catch (error) {
+      this.message = this.api.error(error);
+    } finally {
+      this.cdr.markForCheck();
+    }
   }
 }

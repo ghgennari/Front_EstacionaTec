@@ -8,9 +8,12 @@
       <div class="card-header toolbar">
         <div>
           <strong>{{ report.name }}</strong>
-          <p>Gerado em {{ report.date }} • {{ report.size }} • PDF</p>
+          <p>
+            Gerado em {{ report.date }} • {{ report.size }} •
+            {{ report.available ? 'CSV' : 'Demonstração sem arquivo' }}
+          </p>
         </div>
-        <button type="button" class="btn btn-primary" (click)="download()">Baixar</button>
+        <button type="button" class="btn btn-primary" (click)="download(report)">Baixar</button>
       </div>
     }
   </section>
@@ -35,7 +38,22 @@
           <option>Tempo Médio de Permanência</option>
         </select>
       </div>
-      <button class="btn btn-primary">Gerar Relatório Personalizado</button>
+      <div class="grid grid-2">
+        <div class="field">
+          <label>Placa (opcional)</label><input class="input" name="plate" [(ngModel)]="plate" />
+        </div>
+        <div class="field">
+          <label>Operador ID (opcional)</label
+          ><input class="input" type="number" name="userId" [(ngModel)]="userId" />
+        </div>
+      </div>
+      <label>Tipo de evento (opcional)</label
+      ><select class="input" name="eventType" [(ngModel)]="eventType">
+        <option value="">Todos</option>
+        <option>Entrada</option>
+        <option>Saída</option>
+      </select>
+      <button class="btn btn-primary" [disabled]="busy">Gerar Relatório Personalizado</button>
     </form>
   </section>
   @if (message) {
