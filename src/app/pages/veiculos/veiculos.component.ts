@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import {
   ParkingRegistryService,
   RegisteredVehicle,
@@ -8,70 +8,110 @@ import {
   standalone: false,
   templateUrl: './veiculos.component.html',
 })
-export class VeiculosComponent {
-  private readonly registry = inject(ParkingRegistryService);
+export class VeiculosComponent implements OnInit {
+  private readonly api = inject(ParkingRegistryService);
+  private readonly cdr = inject(ChangeDetectorRef);
   search = '';
   modal = false;
+  busy = false;
   editingId: number | null = null;
   pendingDelete: RegisteredVehicle | null = null;
-  form = { plate: '', model: '', color: '', owner: '', type: 'Carro' };
-  get vehicles(): RegisteredVehicle[] {
-    return this.registry.vehicles;
+  error = '';
+  form = this.emptyForm();
+  get canManage(): boolean {
+    return this.api.isAdmin();
   }
-  set vehicles(value: RegisteredVehicle[]) {
-    this.registry.vehicles = value;
+  get vehicles() {
+    return this.api.vehicles;
+  }
+  get people() {
+    return this.api.people;
   }
   get filtered() {
     return this.vehicles.filter((v) =>
       Object.values(v).join(' ').toLowerCase().includes(this.search.toLowerCase()),
     );
   }
-  category(vehicle: RegisteredVehicle): string {
-    return (
-      this.registry.people.find(
-        (person) =>
-          person.name.trim().toLocaleLowerCase('pt-BR') ===
-          vehicle.owner.trim().toLocaleLowerCase('pt-BR'),
-      )?.type ?? 'Não identificado'
-    );
+  private emptyForm() {
+    return {
+      plate: '',
+      model: '',
+      color: '',
+      ownerId: null as number | null,
+      type: 'Carro',
+      brand: '',
+      authorized: true,
+    };
   }
-
+  category(vehicle: RegisteredVehicle): string {
+    return vehicle.category;
+  }
+  async ngOnInit(): Promise<void> {
+    try {
+      await this.api.loadRegistry();
+    } catch (error) {
+      this.error = this.api.error(error);
+    } finally {
+      this.cdr.markForCheck();
+    }
+  }
   openCreate(): void {
+    if (!this.canManage) return;
     this.closeModal();
     this.modal = true;
   }
-
   edit(vehicle: RegisteredVehicle): void {
+    if (!this.canManage) return;
+    this.error = '';
     this.editingId = vehicle.id;
-    const { id, ...data } = vehicle;
-    this.form = { ...data };
+    this.form = {
+      plate: vehicle.plate,
+      model: vehicle.model,
+      color: vehicle.color,
+      ownerId: vehicle.ownerId,
+      type: vehicle.type,
+      brand: vehicle.brand ?? '',
+      authorized: vehicle.authorized,
+    };
     this.modal = true;
   }
-
   closeModal(): void {
     this.modal = false;
     this.editingId = null;
-    this.form = { plate: '', model: '', color: '', owner: '', type: 'Carro' };
+    this.form = this.emptyForm();
   }
-
-  confirmDelete(): void {
-    if (!this.pendingDelete) return;
-    this.vehicles = this.vehicles.filter((vehicle) => vehicle.id !== this.pendingDelete!.id);
-    this.pendingDelete = null;
+  async confirmDelete(): Promise<void> {
+    if (!this.canManage || !this.pendingDelete || this.busy) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await this.api.request('DELETE', '/veiculos/' + this.pendingDelete.id);
+      this.pendingDelete = null;
+      await this.api.loadRegistry();
+    } catch (error) {
+      this.error = this.api.error(error);
+    } finally {
+      this.busy = false;
+      this.cdr.markForCheck();
+    }
   }
-
-  save() {
-    if (this.form.plate && this.form.owner) {
-      if (this.editingId !== null) {
-        this.vehicles = this.vehicles.map((vehicle) =>
-          vehicle.id === this.editingId ? { ...vehicle, ...this.form } : vehicle,
-        );
-        this.closeModal();
-        return;
-      }
-      const nextId = Math.max(0, ...this.vehicles.map((vehicle) => vehicle.id)) + 1;
-      this.vehicles = [...this.vehicles, { id: nextId, ...this.form }];
+  async save(): Promise<void> {
+    if (!this.canManage || this.busy) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await this.api.request(
+        this.editingId === null ? 'POST' : 'PUT',
+        '/veiculos' + (this.editingId === null ? '' : '/' + this.editingId),
+        this.form,
+      );
       this.closeModal();
+      await this.api.loadRegistry();
+    } catch (error) {
+      this.error = this.api.error(error);
+    } finally {
+      this.busy = false;
+      this.cdr.markForCheck();
     }
   }
 }

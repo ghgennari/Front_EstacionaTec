@@ -1,45 +1,36 @@
-import { TestBed } from '@angular/core/testing';
+import { create, vehicle } from '../../core/testing/api-test';
 import { VeiculosComponent } from './veiculos.component';
-
-describe('Ações de veículos', () => {
-  function create() {
-    TestBed.configureTestingModule({});
-    return TestBed.runInInjectionContext(() => new VeiculosComponent());
-  }
-
-  it('obtém a categoria pelo proprietário', () => {
-    const component = create();
-    expect(component.vehicles.map(vehicle => component.category(vehicle))).toEqual([
-      'Aluno', 'Professor', 'Funcionário',
-    ]);
-  });
-
-  it('edita sem duplicar o veículo ou mudar seu ID', () => {
-    const component = create();
-    const vehicle = component.vehicles[0];
+describe('Veículos integrados', () => {
+  it('permite ao porteiro apenas consultar veículos, sem buscar pessoas ou oferecer alterações', async () => {
+    const { component, http, fixture } = create(VeiculosComponent, 'Porteiro');
+    fixture.detectChanges();
+    http.expectOne('/api/veiculos').flush([vehicle]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain(vehicle.plate);
+    expect(fixture.nativeElement.textContent).not.toContain('Cadastrar Veículo');
+    expect(fixture.nativeElement.textContent).not.toContain('Editar');
+    expect(fixture.nativeElement.textContent).not.toContain('Excluir');
+    http.expectNone('/api/pessoas');
+    component.openCreate();
     component.edit(vehicle);
-    component.form.model = 'Novo modelo';
-    component.save();
-    expect(component.vehicles.length).toBe(3);
-    expect(component.vehicles[0].id).toBe(vehicle.id);
-    expect(component.vehicles[0].model).toBe('Novo modelo');
+    await component.save();
+    component.pendingDelete = vehicle;
+    await component.confirmDelete();
+    expect(component.modal).toBe(false);
+    http.verify();
   });
 
-  it('cancelar descarta alterações do formulário', () => {
-    const component = create();
-    component.edit(component.vehicles[0]);
-    component.form.model = 'Alteração cancelada';
-    component.closeModal();
-    expect(component.vehicles[0].model).toBe('Honda Civic');
-    expect(component.editingId).toBeNull();
-  });
-
-  it('exclui somente após confirmação e apenas o veículo escolhido', () => {
-    const component = create();
-    component.pendingDelete = component.vehicles[1];
-    expect(component.vehicles.length).toBe(3);
-    component.confirmDelete();
-    expect(component.vehicles.map(vehicle => vehicle.id)).toEqual([1, 3]);
-    expect(component.pendingDelete).toBeNull();
+  it('envia o ID do proprietário e mantém formulário se o servidor rejeita uma placa duplicada', async () => {
+    const { component, http } = create(VeiculosComponent);
+    component.edit(vehicle);
+    const pending = component.save();
+    const request = http.expectOne('/api/veiculos/1');
+    expect(request.request.body.ownerId).toBe(1);
+    request.flush({ message: 'Placa já cadastrada.' }, { status: 409, statusText: 'Conflict' });
+    await pending;
+    expect(component.modal).toBe(true);
+    expect(component.error).toContain('Placa');
+    http.verify();
   });
 });

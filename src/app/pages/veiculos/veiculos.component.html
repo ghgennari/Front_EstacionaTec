@@ -1,10 +1,13 @@
+@if (error && !modal && !pendingDelete) {
+  <p role="alert">{{ error }}</p>
+}
 <div class="page-stack">
   <div class="toolbar">
     <div class="page-title">
       <h2>Veículos</h2>
-      <p>Gerencie os veículos cadastrados</p>
+      <p>{{ canManage ? 'Gerencie os veículos cadastrados' : 'Consulte os veículos cadastrados' }}</p>
     </div>
-    <button class="btn btn-primary" (click)="openCreate()">＋ Cadastrar Veículo</button>
+    @if (canManage) { <button class="btn btn-primary" (click)="openCreate()">＋ Cadastrar Veículo</button> }
   </div>
   <section class="card">
     <div class="card-body">
@@ -25,7 +28,7 @@
             <th>Proprietário</th>
             <th>Categoria do proprietário</th>
             <th>Tipo</th>
-            <th>Ações</th>
+            @if (canManage) { <th>Ações</th> }
           </tr>
         </thead>
         <tbody>
@@ -44,6 +47,7 @@
               <td>
                 <span class="badge badge-blue">{{ v.type }}</span>
               </td>
+              @if (canManage) {
               <td>
                 <button
                   type="button"
@@ -56,12 +60,13 @@
                 <button
                   type="button"
                   class="btn btn-danger"
-                  (click)="pendingDelete = v"
+                  (click)="error = ''; pendingDelete = v"
                   [attr.aria-label]="'Excluir veículo ' + v.plate"
                 >
                   Excluir
                 </button>
               </td>
+              }
             </tr>
           }
         </tbody>
@@ -69,7 +74,7 @@
     </div>
   </section>
 </div>
-@if (modal) {
+@if (modal && canManage) {
   <div class="modal-backdrop">
     <section class="modal">
       <div class="card-header toolbar">
@@ -108,27 +113,46 @@
           </div>
         </div>
         <div class="field">
-          <label>Proprietário *</label><input class="input" name="owner" [(ngModel)]="form.owner" />
+          <label>Proprietário *</label>
+          <select class="input" name="ownerId" [(ngModel)]="form.ownerId">
+            <option [ngValue]="null">Selecione uma pessoa</option>
+            @for (person of people; track person.id) {
+              <option [ngValue]="person.id">
+                {{ person.name }} — {{ person.document || person.email }}
+              </option>
+            }
+          </select>
+          <label>Marca</label><input class="input" name="brand" [(ngModel)]="form.brand" />
+          <label
+            ><input type="checkbox" name="authorized" [(ngModel)]="form.authorized" /> Acesso
+            autorizado</label
+          >
         </div>
+        @if (error) {
+          <p role="alert">{{ error }}</p>
+        }
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button
-          ><button class="btn btn-primary">Salvar Veículo</button>
+          ><button class="btn btn-primary" [disabled]="busy">Salvar Veículo</button>
         </div>
       </form>
     </section>
   </div>
 }
-@if (pendingDelete; as vehicle) {
+@if (canManage && pendingDelete; as vehicle) {
   <div class="modal-backdrop">
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
       <div class="card-header"><h3 id="delete-title">Excluir veículo</h3></div>
       <div class="card-body">
         <p>Deseja excluir o veículo {{ vehicle.plate }} de {{ vehicle.owner }}?</p>
+        @if (error) {
+          <p role="alert">{{ error }}</p>
+        }
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" (click)="pendingDelete = null">
             Cancelar
           </button>
-          <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="busy">
             Confirmar exclusão
           </button>
         </div>
