@@ -1,0 +1,22 @@
+.owner-dialog {
+  width: min(680px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+.owner-dialog::backdrop {
+  background: rgb(0 0 0 / 50%);
+}
+
+.owner-details dt {
+  margin-bottom: 6px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.owner-details dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}

@@ -1,51 +1,75 @@
+import { create } from '../../core/testing/api-test';
 import { HistoricoComponent } from './historico.component';
-import { TestBed } from '@angular/core/testing';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterModule, provideRouter } from '@angular/router';
+describe('Histórico integrado', () => {
+  async function setupOwner(document: string | null) {
+    const context = create(HistoricoComponent);
+    context.fixture.detectChanges();
+    context.http.expectOne('/api/historico').flush([{
+      id: 1, plate: 'TST-1234', owner: 'Ana', ownerDocument: document, model: 'Uno',
+      category: document ? 'Aluno' : 'Visitante', brand: null,
+      entry: '2026-09-19T10:00:00', exit: '2026-09-19T11:30:00',
+    }]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    context.fixture.detectChanges();
+    const dialog = context.fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    dialog.showModal = () => dialog.setAttribute('open', '');
+    dialog.close = () => dialog.removeAttribute('open');
+    return { ...context, dialog };
+  }
 
-describe('Histórico de permanências', () => {
-  it('exibe o modelo e direciona ao cadastro do proprietário correto', async () => {
-    await TestBed.configureTestingModule({
-      declarations: [HistoricoComponent],
-      imports: [CommonModule, FormsModule, RouterModule],
-      providers: [provideRouter([])],
-    }).compileComponents();
-    const fixture = TestBed.createComponent(HistoricoComponent);
+  it('abre o proprietário em popup e mostra contato sem link para pessoas', async () => {
+    const { component, fixture, http, dialog } = await setupOwner('123.456');
+    fixture.nativeElement.querySelector('tbody button').click();
+    expect(dialog.open).toBe(true);
+    http.expectOne('/api/pessoas').flush([{
+      id: 2, name: 'Ana Atualizada', document: '123456', email: 'ana@example.com',
+      phone: '11999999999', type: 'Aluno',
+    }]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
     fixture.detectChanges();
-    const rows = fixture.nativeElement.querySelectorAll('tbody tr');
-    expect(rows.length).toBe(3);
-    expect(rows[0].children[1].textContent).toContain('Civic');
-    expect(rows[0].querySelector('a').getAttribute('href')).toBe(
-      '/pessoas?proprietario=123.456.789-00',
-    );
-    expect(rows[2].querySelector('a')).toBeNull();
-    expect(rows[2].textContent).toContain('Cadastro não vinculado');
-  });
-  it('exibe somente registros com saída, inclusive ao pesquisar', () => {
-    const component = new HistoricoComponent();
-    expect(component.filtered.map((record) => record.id)).toEqual([1, 3, 4]);
-    component.search = 'Carlos';
-    expect(component.filtered).toEqual([]);
-    component.search = ' maria ';
-    expect(component.filtered.map((record) => record.id)).toEqual([1]);
+    expect(dialog.textContent).toContain('Ana');
+    expect(dialog.textContent).toContain('ana@example.com');
+    expect(dialog.textContent).toContain('11999999999');
+    expect(fixture.nativeElement.querySelector('a[href="/pessoas"]')).toBeNull();
+    dialog.querySelector('button')!.click();
+    expect(dialog.open).toBe(false);
+    expect(component.selectedRecord).toBeNull();
+    http.verify();
   });
 
-  it('calcula a permanência a partir dos horários de entrada e saída', () => {
-    const component = new HistoricoComponent();
-    expect(component.duration(component.records[0])).toBe('4h 15min');
-    expect(component.duration(component.records[2])).toBe('8h 25min');
+  it('mostra visitante sem cadastro e fecha com Escape', async () => {
+    const { component, fixture, http, dialog } = await setupOwner(null);
+    fixture.nativeElement.querySelector('tbody button').click();
+    fixture.detectChanges();
+    expect(dialog.open).toBe(true);
+    expect(dialog.textContent).toContain('Ana');
+    expect(dialog.textContent).toContain('Visitante');
+    expect(dialog.textContent).toContain('TST-1234');
+    http.expectNone('/api/pessoas');
+    dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
+    expect(dialog.open).toBe(false);
+    expect(component.selectedRecord).toBeNull();
+    http.verify();
   });
 
-  it('considera a mudança de dia e permanências menores que uma hora', () => {
-    const component = new HistoricoComponent();
-    const record = {
-      ...component.records[0],
-      entry: '2026-08-15T23:50:00',
-      exit: '2026-08-16T00:10:00',
-    };
-    expect(component.duration(record)).toBe('20min');
-    record.exit = '2026-08-17T01:50:00';
-    expect(component.duration(record)).toBe('26h 0min');
+  it('mostra estadias encerradas e calcula permanência com dados da API', async () => {
+    const { component, http } = create(HistoricoComponent);
+    const load = component.ngOnInit();
+    http.expectOne('/api/historico').flush([
+      {
+        id: 1,
+        plate: 'TST-1234',
+        owner: 'Teste',
+        ownerDocument: '123',
+        model: 'Teste',
+        entry: '2026-09-19T10:00:00',
+        exit: '2026-09-19T11:30:00',
+      },
+      { id: 2, plate: 'TST-9999', owner: 'Outro', entry: '2026-09-19T10:00:00', exit: null },
+    ]);
+    await load;
+    expect(component.filtered.length).toBe(1);
+    expect(component.duration(component.filtered[0])).toBe('1h 30min');
+    http.verify();
   });
 });

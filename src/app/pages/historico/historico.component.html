@@ -1,3 +1,6 @@
+@if (error) {
+  <p role="alert">{{ error }}</p>
+}
 <div class="page-stack">
   <div class="page-title">
     <h2>Histórico de Acessos</h2>
@@ -42,18 +45,15 @@
                 <span class="badge">{{ duration(r) }}</span>
               </td>
               <td>
-                @if (r.ownerDocument) {
-                  <a
-                    class="btn btn-secondary"
-                    routerLink="/pessoas"
-                    [queryParams]="{ proprietario: r.ownerDocument }"
-                    [attr.aria-label]="'Ver cadastro de ' + r.owner"
-                  >
-                    Ver proprietário
-                  </a>
-                } @else {
-                  <span class="muted">Cadastro não vinculado</span>
-                }
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  (click)="openOwner(r)"
+                  aria-haspopup="dialog"
+                  [attr.aria-label]="'Ver informações de ' + r.owner"
+                >
+                  Ver proprietário
+                </button>
               </td>
             </tr>
           }
@@ -65,3 +65,35 @@
     }
   </section>
 </div>
+
+<dialog #ownerDialog class="modal owner-dialog" aria-labelledby="owner-title" (cancel)="closeOwner($event)">
+  <div class="card-header toolbar">
+    <h3 id="owner-title">Informações do proprietário</h3>
+    <button class="btn btn-secondary" type="button" (click)="closeOwner()" autofocus>Fechar</button>
+  </div>
+  @if (selectedRecord; as record) {
+    <div class="card-body">
+      <p class="muted">Dados registrados neste acesso.</p>
+      <dl class="grid grid-2 owner-details">
+        <div><dt>Nome / responsável</dt><dd>{{ record.owner }}</dd></div>
+        <div><dt>CPF/Documento</dt><dd>{{ record.ownerDocument || 'Não informado' }}</dd></div>
+        <div><dt>Tipo</dt><dd>{{ record.category || 'Não informado' }}</dd></div>
+        <div><dt>Placa</dt><dd>{{ record.plate }}</dd></div>
+        <div><dt>Modelo</dt><dd>{{ record.model || 'Não informado' }}</dd></div>
+      </dl>
+      @if (ownerLoading) {
+        <p role="status">Carregando contato do proprietário...</p>
+      } @else if (ownerError) {
+        <p role="alert">Não foi possível consultar o contato. {{ ownerError }}</p>
+      } @else if (owner; as person) {
+        <h4>Contato do cadastro atual</h4>
+        <dl class="grid grid-2 owner-details">
+          <div><dt>E-mail</dt><dd>{{ person.email || 'Não informado' }}</dd></div>
+          <div><dt>Telefone</dt><dd>{{ person.phone || 'Não informado' }}</dd></div>
+        </dl>
+      } @else if (canViewContact() || !record.ownerDocument) {
+        <p class="muted">{{ record.ownerDocument ? 'Cadastro atual não encontrado.' : 'Acesso sem cadastro de pessoa vinculado.' }}</p>
+      }
+    </div>
+  }
+</dialog>
