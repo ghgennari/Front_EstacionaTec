@@ -14,6 +14,7 @@
       <label for="entry-plate">Placa do Veículo</label>
       <input
         id="entry-plate"
+        [disabled]="busy || visitorOpen"
         name="plate"
         class="plate-input"
         [(ngModel)]="plate"
@@ -26,13 +27,13 @@
         [attr.aria-describedby]="error ? 'entry-error' : null"
       />
       <div class="entry-actions">
-        <button class="register-button" type="submit">
+        <button class="register-button" type="submit" [disabled]="busy || visitorOpen">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M14 3h6v18h-6M3 12h12m-5-5 5 5-5 5" />
           </svg>
           Registrar Entrada
         </button>
-        <button class="gate-button" type="button" (click)="openGate()">
+        <button class="gate-button" type="button" (click)="openGate()" [disabled]="busy || visitorOpen">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 21h18M5 21V4l9-2v19M14 5h5v16M10 11v3" />
           </svg>
@@ -56,7 +57,7 @@
             <dd>{{ result.plate }}</dd>
           </div>
           <div>
-            <dt>Proprietário:</dt>
+            <dt>Responsável:</dt>
             <dd>{{ result.owner }}</dd>
           </div>
           <div>
@@ -70,9 +71,7 @@
           <div class="entry-time">
             <dt>Horário:</dt>
             <dd>
-              <time [attr.datetime]="result.enteredAt.toISOString()">{{
-                result.enteredAt | date: 'HH:mm'
-              }}</time>
+              <time [attr.datetime]="result.enteredAt">{{ result.enteredAt | date: 'HH:mm' }}</time>
             </dd>
           </div>
         </dl>
@@ -93,3 +92,31 @@
     <p class="gate-message" role="status">{{ gateMessage }}</p>
   }
 </div>
+
+<dialog #visitorDialog class="visitor-dialog" aria-labelledby="visitor-title"
+  aria-describedby="visitor-description" (cancel)="cancelVisitor($event)">
+  <h2 id="visitor-title">Entrada de visitante</h2>
+  <p id="visitor-description">Informe o responsável e o modelo para registrar esta visita. Os dados ficarão no histórico e na lista de veículos presentes até a saída.</p>
+  <form (ngSubmit)="confirmVisitor()" novalidate>
+    <label for="visitor-plate">Placa do veículo</label>
+    <input id="visitor-plate" class="visitor-input visitor-plate" [value]="visitorPlate" readonly />
+
+    <label for="visitor-responsible">Nome do responsável</label>
+    <input id="visitor-responsible" class="visitor-input" name="responsibleName"
+      [(ngModel)]="responsibleName" maxlength="150" required autofocus [disabled]="busy" />
+
+    <label for="visitor-model">Modelo do carro</label>
+    <input id="visitor-model" class="visitor-input" name="visitorModel"
+      [(ngModel)]="visitorModel" maxlength="50" placeholder="Ex.: Fiat Uno" required [disabled]="busy" />
+
+    @if (visitorError) {
+      <p class="visitor-error" role="alert">{{ visitorError }}</p>
+    }
+    <div class="entry-actions">
+      <button class="gate-button" type="button" (click)="cancelVisitor()" [disabled]="busy">Cancelar</button>
+      <button class="register-button" type="submit" [disabled]="busy || !responsibleName.trim() || !visitorModel.trim()">
+        {{ busy ? 'Registrando...' : 'Confirmar entrada' }}
+      </button>
+    </div>
+  </form>
+</dialog>

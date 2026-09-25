@@ -1,99 +1,134 @@
-import { TestBed } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
-import { provideRouter } from '@angular/router';
-import { ParkingRegistryService } from '../../core/services/parking-registry.service';
-import { VeiculosComponent } from '../veiculos/veiculos.component';
-import { PessoasComponent } from '../pessoas/pessoas.component';
+import { create, entry } from '../../core/testing/api-test';
 import { EntradaComponent } from './entrada.component';
-
-describe('Registro de entrada', () => {
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [FormsModule],
-      declarations: [EntradaComponent],
-      providers: [provideRouter([])],
-    });
-  });
-
-  for (const plate of ['abc-1234', 'abc1234', 'ABC-1234', 'ABC1234']) {
-    it('consulta a placa ' + plate + ' e registra proprietário, categoria e horário', () => {
-      const component = TestBed.createComponent(EntradaComponent).componentInstance;
-      const before = Date.now();
-      component.plate = plate;
-      component.submit();
-      expect(component.entry?.plate).toBe('ABC-1234');
-      expect(component.entry?.owner).toBe('Maria Silva');
-      expect(component.entry?.category).toBe('Aluno');
-      expect(component.entry?.enteredAt.getTime()).toBeGreaterThanOrEqual(before);
-      expect(TestBed.inject(ParkingRegistryService).entries.length).toBe(1);
-    });
+describe('Entrada integrada', () => {
+  function setupVisitor() {
+    const context = create(EntradaComponent);
+    context.fixture.detectChanges();
+    const dialog = context.fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    // O ambiente de teste não implementa o comportamento modal do navegador.
+    dialog.showModal = () => dialog.setAttribute('open', '');
+    dialog.close = () => dialog.removeAttribute('open');
+    return { ...context, dialog };
   }
 
-  it('obtém a categoria Professor do cadastro de pessoas', () => {
-    const component = TestBed.createComponent(EntradaComponent).componentInstance;
-    component.plate = 'xyz5678';
-    component.submit();
-    expect(component.entry?.category).toBe('Professor');
-  });
-
-  it('rejeita placas inválidas, vazias e não cadastradas sem registrar eventos', () => {
-    const component = TestBed.createComponent(EntradaComponent).componentInstance;
-    for (const plate of ['', 'ab123', 'ABC--1234', 'QQQ1111']) {
-      component.plate = plate;
-      component.submit();
-      expect(component.error).not.toBe('');
-      expect(component.entry).toBeNull();
-    }
-    expect(TestBed.inject(ParkingRegistryService).entries).toEqual([]);
-  });
-
-  it('consulta um veículo e proprietário criados nas telas de cadastro', () => {
-    const people = TestBed.runInInjectionContext(() => new PessoasComponent());
-    people.form = {
-      name: 'Pessoa Teste',
-      document: '000.000.000-00',
-      email: '',
-      phone: '',
-      type: 'Professor',
-    };
-    people.save();
-    const vehicles = TestBed.runInInjectionContext(() => new VeiculosComponent());
-    vehicles.form = {
-      plate: 'TST1234',
-      model: 'Modelo Teste',
-      color: 'Azul',
-      owner: 'Pessoa Teste',
-      type: 'Carro',
-    };
-    vehicles.save();
-    const component = TestBed.createComponent(EntradaComponent).componentInstance;
-    component.plate = 'tst-1234';
-    component.submit();
-    expect(component.entry?.owner).toBe('Pessoa Teste');
-    expect(component.entry?.category).toBe('Professor');
-  });
-
-  it('abertura manual não registra entrada nem informa sucesso físico', () => {
-    const component = TestBed.createComponent(EntradaComponent).componentInstance;
-    component.openGate();
-    expect(component.gateMessage).toContain('não está conectado');
-    expect(TestBed.inject(ParkingRegistryService).entries).toEqual([]);
-  });
-
-  it('envia o formulário e mostra os dados na tela', async () => {
-    const fixture = TestBed.createComponent(EntradaComponent);
+  it('pede responsável e modelo com a placa preenchida e permite cancelar sem cadastrar', async () => {
+    const { component, http, fixture, dialog } = setupVisitor();
+    component.plate = 'VIS1234';
+    const pending = component.submit();
+    http.expectOne('/api/movimentacoes/entrada').flush(
+      { code: 'VEICULO_NAO_CADASTRADO', message: 'Informe os dados.' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await pending;
     fixture.detectChanges();
-    await fixture.whenStable();
-    const root: HTMLElement = fixture.nativeElement;
-    const input = root.querySelector('input')!;
-    input.value = 'abc1234';
-    input.dispatchEvent(new Event('input'));
-    root
-      .querySelector('form')!
-      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect(dialog.open).toBe(true);
+    const plate = fixture.nativeElement.querySelector('#visitor-plate') as HTMLInputElement;
+    expect(plate.value).toBe('VIS1234');
+    expect(plate.readOnly).toBe(true);
+    expect(component.entry).toBeNull();
+    await component.confirmVisitor();
+    expect(component.visitorError).toContain('Preencha');
+    component.cancelVisitor();
+    expect(dialog.open).toBe(false);
+    expect(component.plate).toBe('VIS1234');
+    http.expectNone('/api/movimentacoes/entrada');
+    http.verify();
+  });
+
+  it('confirma visitante sem imagem e conserva os dados e identificador após falha de rede', async () => {
+    const { component, http, dialog } = setupVisitor();
+    component.plate = 'VIS1234';
+    const pending = component.submit();
+    const initial = http.expectOne('/api/movimentacoes/entrada');
+    const requestId = initial.request.body.requestId;
+    initial.flush({ code: 'VEICULO_NAO_CADASTRADO' }, { status: 409, statusText: 'Conflict' });
+    await pending;
+    component.responsibleName = ' Ana Visitante ';
+    component.visitorModel = ' Fiat Uno ';
+    const first = component.confirmVisitor();
+    await component.confirmVisitor();
+    component.cancelVisitor();
+    expect(dialog.open).toBe(true);
+    const failed = http.expectOne('/api/movimentacoes/entrada');
+    expect(failed.request.body).toEqual({
+      plate: 'VIS1234', requestId,
+      visitor: { responsibleName: 'Ana Visitante', model: 'Fiat Uno' },
+    });
+    failed.error(new ProgressEvent('error'));
+    await first;
+    expect(component.visitorError).toContain('conectar à API');
+    expect(component.responsibleName).toBe(' Ana Visitante ');
+    const retry = component.confirmVisitor();
+    const request = http.expectOne('/api/movimentacoes/entrada');
+    expect(request.request.body.requestId).toBe(requestId);
+    request.flush({ ...entry, vehicleId: null, plate: 'VIS-1234', owner: 'Ana Visitante', category: 'Visitante', model: 'Fiat Uno' });
+    await retry;
+    expect(dialog.open).toBe(false);
+    expect(component.entry?.owner).toBe('Ana Visitante');
+    expect(component.entry?.vehicleId).toBeNull();
+    expect(component.gateMessage).toContain('não conectado');
+    http.verify();
+  });
+
+  it('não abre cadastro para veículo bloqueado ou entrada duplicada', async () => {
+    const { component, http, dialog } = setupVisitor();
+    component.plate = 'TST1234';
+    const pending = component.submit();
+    http.expectOne('/api/movimentacoes/entrada').flush(
+      { message: 'Veículo sem autorização ativa.' }, { status: 409, statusText: 'Conflict' },
+    );
+    await pending;
+    expect(dialog.open).toBe(false);
+    expect(component.error).toContain('sem autorização');
+    http.verify();
+  });
+
+  it('registra manualmente sem exibir ou enviar campo de imagem', async () => {
+    const { component, http, fixture } = create(EntradaComponent);
     fixture.detectChanges();
-    expect(root.textContent).toContain('Entrada Autorizada');
-    expect(root.textContent).toContain('Maria Silva');
-    expect(root.querySelectorAll('input').length).toBe(1);
+    expect(fixture.nativeElement.querySelector('input[type="file"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Capturar da câmera');
+    component.plate = 'TST1234';
+    const pending = component.submit();
+    const request = http.expectOne('/api/movimentacoes/entrada');
+    expect(request.request.body.imageId).toBeUndefined();
+    request.flush(entry);
+    await pending;
+    expect(component.entry?.id).toBe(20);
+    http.verify();
+  });
+  it('mantém o registro e apresenta falha da cancela sem enviar entrada duplicada', async () => {
+    const { component, http } = create(EntradaComponent);
+    component.plate = 'TST1234';
+    const pending = component.submit();
+    await component.submit();
+    const request = http.expectOne('/api/movimentacoes/entrada');
+    expect(request.request.body.imageId).toBeUndefined();
+    request.flush(entry);
+    await pending;
+    expect(component.entry?.id).toBe(20);
+    expect(component.gateMessage).toContain('não conectado');
+    const gate = component.openGate();
+    const command = http.expectOne('/api/cancela/abrir-manualmente');
+    expect(command.request.body).toBeNull();
+    command.flush({ message: 'ESP32 não conectado' }, { status: 503, statusText: 'Unavailable' });
+    await gate;
+    expect(component.entry?.id).toBe(20);
+    http.verify();
+  });
+  it('preserva identificador ao repetir requisição que falhou na rede', async () => {
+    const { component, http } = create(EntradaComponent);
+    component.plate = 'TST1234';
+    const first = component.submit();
+    const firstRequest = http.expectOne('/api/movimentacoes/entrada');
+    const requestId = firstRequest.request.body.requestId;
+    firstRequest.error(new ProgressEvent('error'));
+    await first;
+    const second = component.submit();
+    const secondRequest = http.expectOne('/api/movimentacoes/entrada');
+    expect(secondRequest.request.body.requestId).toBe(requestId);
+    secondRequest.flush(entry);
+    await second;
+    http.verify();
   });
 });
