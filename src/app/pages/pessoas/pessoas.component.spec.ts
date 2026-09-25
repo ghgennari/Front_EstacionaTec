@@ -1,83 +1,38 @@
-import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
-import { ParkingRegistryService } from '../../core/services/parking-registry.service';
+import { create, person, vehicle } from '../../core/testing/api-test';
 import { PessoasComponent } from './pessoas.component';
-
-describe('Ações de pessoas', () => {
-  function create() {
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
-    return TestBed.runInInjectionContext(() => new PessoasComponent());
-  }
-
-  it('abre os dados do proprietário pelo documento recebido do histórico', () => {
-    TestBed.configureTestingModule({
-      providers: [
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            queryParamMap: of(convertToParamMap({ proprietario: '123.456.789-00' })),
-          },
-        },
-      ],
-    });
-    const component = TestBed.runInInjectionContext(() => new PessoasComponent());
-    component.ngOnInit();
-    expect(component.selectedOwner?.name).toBe('Maria Silva');
-    expect(component.selectedOwner?.email).toBe('maria@edu.br');
-    expect(component.modal).toBe(false);
-  });
-
-  it('não abre outra pessoa quando o cadastro não existe mais', () => {
-    const component = create();
-    component.ownerDocument = 'inexistente';
-    expect(component.selectedOwner).toBeUndefined();
-  });
-
-  it('edita a pessoa e mantém o vínculo dos veículos', () => {
-    const component = create();
+describe('Pessoas integradas', () => {
+  it('carrega o cadastro e mantém o formulário aberto quando o servidor rejeita', async () => {
+    const { component, http } = create(PessoasComponent);
+    const load = component.ngOnInit();
+    http.expectOne('/api/pessoas').flush([person]);
+    http.expectOne('/api/veiculos').flush([vehicle]);
+    await load;
+    component.ownerDocument = '123';
+    expect(component.selectedOwner?.id).toBe(1);
     component.edit(component.people[0]);
-    component.form.name = 'Maria Atualizada';
-    component.form.type = 'Professor';
-    component.save();
-    expect(component.people.length).toBe(3);
-    const entry = TestBed.inject(ParkingRegistryService).registerEntry('ABC1234');
-    expect(entry.owner).toBe('Maria Atualizada');
-    expect(entry.category).toBe('Professor');
+    component.form.document = 'duplicado';
+    const pending = component.save();
+    http
+      .expectOne('/api/pessoas/1')
+      .flush({ message: 'Documento duplicado' }, { status: 409, statusText: 'Conflict' });
+    await pending;
+    expect(component.modal).toBe(true);
+    expect(component.people[0].document).toBe('123');
+    http.verify();
   });
-
-  it('cancelar descarta alterações', () => {
-    const component = create();
-    component.edit(component.people[0]);
-    component.form.name = 'Alteração';
-    component.closeModal();
-    expect(component.people[0].name).toBe('Maria Silva');
-  });
-
-  it('bloqueia exclusão de proprietário com veículos', () => {
-    const component = create();
-    component.requestDelete(component.people[0]);
-    component.confirmDelete();
-    expect(component.people.length).toBe(3);
-    expect(component.deleteError).toContain('veículos vinculados');
-  });
-
-  it('exclui pessoa sem veículos somente na confirmação', () => {
-    const component = create();
-    component.form = { name: 'Nova Pessoa', document: '999', email: '', phone: '', type: 'Aluno' };
-    component.save();
-    component.requestDelete(component.people[3]);
-    expect(component.people.length).toBe(4);
-    component.confirmDelete();
-    expect(component.people.length).toBe(3);
-  });
-
-  it('não permite documento duplicado na edição', () => {
-    const component = create();
-    component.edit(component.people[0]);
-    component.form.document = component.people[1].document;
-    component.save();
-    expect(component.error).toContain('Já existe');
-    expect(component.people[0].document).toBe('123.456.789-00');
+  it('mostra o bloqueio de exclusão por vínculo sem apagar localmente', async () => {
+    const { component, http } = create(PessoasComponent);
+    component.requestDelete(person);
+    const pending = component.confirmDelete();
+    http
+      .expectOne('/api/pessoas/1')
+      .flush(
+        { message: 'Pessoa possui veículos vinculados.' },
+        { status: 409, statusText: 'Conflict' },
+      );
+    await pending;
+    expect(component.pendingDelete).toEqual(person);
+    expect(component.deleteError).toContain('vinculados');
+    http.verify();
   });
 });

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import {
@@ -7,103 +7,103 @@ import {
 } from '../../core/services/parking-registry.service';
 @Component({ selector: 'app-pessoas', standalone: false, templateUrl: './pessoas.component.html' })
 export class PessoasComponent implements OnInit {
-  private readonly registry = inject(ParkingRegistryService);
+  private readonly api = inject(ParkingRegistryService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
   ownerDocument: string | null = null;
-
-  get selectedOwner(): RegisteredPerson | undefined {
-    return this.people.find((person) => person.document === this.ownerDocument);
-  }
-
-  ngOnInit(): void {
-    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-      this.ownerDocument = params.get('proprietario');
-    });
-  }
   search = '';
   modal = false;
+  busy = false;
   editingPerson: RegisteredPerson | null = null;
   pendingDelete: RegisteredPerson | null = null;
   error = '';
   deleteError = '';
-  form = { name: '', document: '', email: '', phone: '', type: 'Aluno' };
-  get people(): RegisteredPerson[] {
-    return this.registry.people;
+  form = this.emptyForm();
+  get people() {
+    return this.api.people;
   }
-  set people(value: RegisteredPerson[]) {
-    this.registry.people = value;
+  get selectedOwner() {
+    return this.people.find((p) => p.document === this.ownerDocument);
   }
   get filtered() {
     return this.people.filter((p) =>
       Object.values(p).join(' ').toLowerCase().includes(this.search.toLowerCase()),
     );
   }
+  private emptyForm() {
+    return { name: '', document: '', email: '', phone: '', type: 'Aluno', active: true };
+  }
+  async ngOnInit(): Promise<void> {
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => (this.ownerDocument = params.get('proprietario')));
+    try {
+      await this.api.loadRegistry();
+    } catch (error) {
+      this.error = this.api.error(error);
+    } finally {
+      this.cdr.markForCheck();
+    }
+  }
   openCreate(): void {
     this.closeModal();
     this.modal = true;
   }
-
   edit(person: RegisteredPerson): void {
     this.editingPerson = person;
-    this.form = { ...person };
+    this.form = {
+      name: person.name,
+      document: person.document ?? '',
+      email: person.email ?? '',
+      phone: person.phone ?? '',
+      type: person.type,
+      active: person.active ?? true,
+    };
     this.error = '';
     this.modal = true;
   }
-
   closeModal(): void {
     this.modal = false;
     this.editingPerson = null;
     this.error = '';
-    this.form = { name: '', document: '', email: '', phone: '', type: 'Aluno' };
+    this.form = this.emptyForm();
   }
-
   requestDelete(person: RegisteredPerson): void {
     this.pendingDelete = person;
     this.deleteError = '';
   }
-
-  confirmDelete(): void {
-    const person = this.pendingDelete;
-    if (!person) return;
-    if (this.registry.vehicles.some((vehicle) => this.sameName(vehicle.owner, person.name))) {
-      this.deleteError =
-        'Esta pessoa possui veículos vinculados. Altere o proprietário ou exclua esses veículos antes de excluir a pessoa.';
-      return;
+  async confirmDelete(): Promise<void> {
+    if (!this.pendingDelete || this.busy) return;
+    this.busy = true;
+    try {
+      await this.api.request('DELETE', '/pessoas/' + this.pendingDelete.id);
+      this.pendingDelete = null;
+      await this.api.loadRegistry();
+    } catch (error) {
+      this.deleteError = this.api.error(error);
+    } finally {
+      this.busy = false;
+      this.cdr.markForCheck();
     }
-    this.people = this.people.filter((item) => item !== person);
-    this.pendingDelete = null;
   }
-
-  private sameName(first: string, second: string): boolean {
-    return first.trim().toLocaleLowerCase('pt-BR') === second.trim().toLocaleLowerCase('pt-BR');
-  }
-
-  save(): void {
-    const data = { ...this.form, name: this.form.name.trim(), document: this.form.document.trim() };
-    if (!data.name || !data.document) {
-      this.error = 'Preencha o nome e o documento.';
-      return;
-    }
-    if (
-      this.people.some(
-        (person) =>
-          person !== this.editingPerson &&
-          person.document.replace(/\W/g, '') === data.document.replace(/\W/g, ''),
-      )
-    ) {
-      this.error = 'Já existe uma pessoa cadastrada com este documento.';
-      return;
-    }
-    const original = this.editingPerson;
-    if (original) {
-      this.people = this.people.map((person) => (person === original ? data : person));
-      this.registry.vehicles = this.registry.vehicles.map((vehicle) =>
-        this.sameName(vehicle.owner, original.name) ? { ...vehicle, owner: data.name } : vehicle,
+  async save(): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await this.api.request(
+        this.editingPerson ? 'PUT' : 'POST',
+        '/pessoas' + (this.editingPerson ? '/' + this.editingPerson.id : ''),
+        this.form,
       );
-    } else {
-      this.people = [...this.people, data];
+      this.closeModal();
+      await this.api.loadRegistry();
+    } catch (error) {
+      this.error = this.api.error(error);
+    } finally {
+      this.busy = false;
+      this.cdr.markForCheck();
     }
-    this.closeModal();
   }
 }

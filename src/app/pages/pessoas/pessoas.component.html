@@ -1,3 +1,6 @@
+@if (error && !modal && !pendingDelete) {
+  <p role="alert">{{ error }}</p>
+}
 <div class="page-stack">
   <div class="toolbar">
     <div class="page-title">
@@ -62,7 +65,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (p of filtered; track p.document) {
+          @for (p of filtered; track p.id) {
             <tr>
               <td>
                 <strong>{{ p.name }}</strong>
@@ -136,9 +139,15 @@
             <label>Telefone</label><input class="input" name="phone" [(ngModel)]="form.phone" />
           </div>
         </div>
+        @if (error) {
+          <p role="alert">{{ error }}</p>
+        }
+        <label
+          ><input type="checkbox" name="active" [(ngModel)]="form.active" /> Pessoa ativa</label
+        >
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button
-          ><button class="btn btn-primary">Salvar Pessoa</button>
+          ><button class="btn btn-primary" [disabled]="busy">Salvar Pessoa</button>
         </div>
         @if (error) {
           <p role="alert">{{ error }}</p>
@@ -160,7 +169,7 @@
           <button type="button" class="btn btn-secondary" (click)="pendingDelete = null">
             Cancelar
           </button>
-          <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="busy">
             Confirmar exclusão
           </button>
         </div>
