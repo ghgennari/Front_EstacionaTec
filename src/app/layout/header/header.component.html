@@ -1,10 +1,25 @@
 <header>
-  <button type="button" class="btn btn-secondary" (click)="toggleSidebar.emit()" [attr.aria-expanded]="sidebarOpen" aria-label="Alternar menu lateral"
+  <button
+    type="button"
+    class="btn btn-secondary"
+    (click)="toggleSidebar.emit()"
+    [attr.aria-expanded]="sidebarOpen"
+    aria-label="Alternar menu lateral"
   >
     {{ sidebarOpen ? '×' : '☰' }}
   </button>
-  <div>
+  <div class="page-heading">
     <h2>{{ title }}</h2>
     <p>{{ date }}</p>
+  </div>
+  <div class="profile">
+    <div class="user">
+      <span class="avatar">{{ api.user()?.name?.slice(0, 2) }}</span>
+      <div class="user-details">
+        <strong>{{ api.user()?.name }}</strong
+        ><small>{{ api.user()?.role }}</small>
+      </div>
+    </div>
+    <button class="logout" type="button" (click)="logout()">Sair</button>
   </div>
 </header>

@@ -3,6 +3,7 @@ header {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  flex-wrap: wrap;
   gap: 16px;
   padding: 14px 24px;
   background: white;
@@ -18,25 +19,74 @@ p {
   font-size: 13px;
   text-transform: capitalize;
 }
-.online {
+.profile {
+  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  background: #f3f4f6;
-  color: #374151;
+  justify-content: flex-end;
+  gap: 16px;
+  min-width: 0;
+  max-width: 100%;
+}
+.user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.page-heading,
+.user-details {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.user-details {
+  max-width: 240px;
+}
+.user strong,
+.user small {
+  display: block;
   font-size: 13px;
 }
-.online span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 0 3px #dcfce7;
+.user small {
+  margin-top: 2px;
+  color: #6b7280;
+}
+.logout {
+  flex-shrink: 0;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 8px;
+  color: #b91c1c;
+  background: #fef2f2;
+  font-size: 14px;
+  font-weight: 600;
+}
+.logout:hover {
+  background: #fee2e2;
+}
+.logout:focus-visible {
+  outline: 2px solid #b91c1c;
+  outline-offset: 3px;
 }
 @media (max-width: 520px) {
-  .online {
-    font-size: 0;
+  header {
+    padding: 12px;
+    gap: 12px;
+  }
+  .profile {
+    flex-basis: 100%;
+    gap: 12px;
   }
 }
