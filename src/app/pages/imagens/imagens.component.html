@@ -53,7 +53,7 @@
   <section class="card">
     <div class="card-header">
       <h3>Histórico de Imagens Capturadas</h3>
-      <p>Todas as capturas de placa registradas no sistema • dados demonstrativos</p>
+      <p>Consulte as imagens registradas no sistema</p>
     </div>
     <div class="table-wrap">
       <table>
@@ -72,7 +72,7 @@
         <tbody>
           @for (image of visibleImages; track image.id) {
             <tr>
-              <td><span class="thumbnail" aria-label="Imagem demonstrativa">▧</span></td>
+              <td><span class="thumbnail" aria-label="Arquivo de imagem">▧</span></td>
               <td>
                 <strong>{{ image.plate }}</strong>
               </td>
@@ -97,8 +97,7 @@
               <td class="muted">{{ image.fileName }}</td>
               <td>
                 <div class="actions">
-                  <button class="btn btn-secondary" (click)="selectedImage = image; message = ''">
-                    Visualizar</button
+                  <button class="btn btn-secondary" (click)="select(image)">Visualizar</button
                   ><button class="btn btn-secondary" (click)="download(image)">Baixar</button>
                 </div>
               </td>
@@ -159,9 +158,19 @@
         </div>
         <div class="card-body page-stack">
           <div class="preview">
-            <span>▧</span>
-            <p>Imagem Capturada</p>
-            <small>Arquivo demonstrativo • imagem não fornecida no protótipo</small>
+            @if (previewUrl) {
+              <img
+                [src]="previewUrl"
+                alt="Imagem capturada do veículo"
+                style="max-width: 100%; max-height: 400px"
+              />
+            } @else {
+              <span>▧</span>
+              <p>Imagem Capturada</p>
+              <small>{{
+                image.available ? 'Carregando imagem...' : 'Arquivo de imagem indisponível'
+              }}</small>
+            }
           </div>
           <dl class="grid grid-2">
             <div>

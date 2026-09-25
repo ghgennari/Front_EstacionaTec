@@ -1,16 +1,8 @@
-import { Component } from '@angular/core';
-
-interface CapturedImage {
-  id: number;
-  plate: string;
-  owner: string;
-  time: string;
-  date: string;
-  type: string;
-  status: string;
-  fileName: string;
-  imagePath: string;
-}
+import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
+import {
+  ParkingRegistryService,
+  CapturedImage,
+} from '../../core/services/parking-registry.service';
 
 @Component({
   selector: 'app-imagens',
@@ -18,7 +10,42 @@ interface CapturedImage {
   templateUrl: './imagens.component.html',
   styleUrl: './imagens.component.css',
 })
-export class ImagensComponent {
+export class ImagensComponent implements OnInit, OnDestroy {
+  private readonly api = inject(ParkingRegistryService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  previewUrl = '';
+  async ngOnInit(): Promise<void> {
+    try {
+      this.images = await this.api.request<CapturedImage[]>('GET', '/imagens');
+    } catch (error) {
+      this.message = this.api.error(error);
+    } finally {
+      this.cdr.markForCheck();
+    }
+  }
+  async select(image: CapturedImage): Promise<void> {
+    if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+    this.selectedImage = image;
+    this.previewUrl = '';
+    this.message = '';
+    if (!image.available) {
+      this.message = 'Registro importado do protótipo, sem arquivo real.';
+      return;
+    }
+    try {
+      this.previewUrl = URL.createObjectURL(
+        await this.api.blob('/imagens/' + image.id + '/arquivo'),
+      );
+    } catch (error) {
+      this.message = this.api.error(error);
+    } finally {
+      this.cdr.markForCheck();
+    }
+  }
+  ngOnDestroy(): void {
+    if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+  }
+
   searchPlate = '';
   dateFilter = '';
   accessType = '';
@@ -27,53 +54,12 @@ export class ImagensComponent {
   message = '';
   page = 1;
   readonly pageSize = 10;
-  readonly images: CapturedImage[] = [
-    {
-      id: 1,
-      plate: 'XYZ-5678',
-      owner: 'Prof. Carlos Santos',
-      time: '14:32:15',
-      type: 'Entrada',
-      status: 'Autorizado',
-      fileName: 'XYZ-5678_143215.jpg',
-    },
-    {
-      id: 2,
-      plate: 'XXX-0000',
-      owner: 'Desconhecido',
-      time: '14:28:43',
-      type: 'Entrada',
-      status: 'Negado',
-      fileName: 'XXX-0000_142843.jpg',
-    },
-    {
-      id: 3,
-      plate: 'ABC-1234',
-      owner: 'Maria Silva',
-      time: '12:45:10',
-      type: 'Saída',
-      status: 'Autorizado',
-      fileName: 'ABC-1234_124510.jpg',
-    },
-    {
-      id: 4,
-      plate: 'DEF-9012',
-      owner: 'Ana Paula',
-      time: '09:15:30',
-      type: 'Entrada',
-      status: 'Autorizado',
-      fileName: 'DEF-9012_091530.jpg',
-    },
-  ].map((image) => ({
-    ...image,
-    date: '2026-05-07',
-    imagePath: `/captures/2026-05-07/${image.fileName}`,
-  }));
+  images: CapturedImage[] = [];
 
   get filtered(): CapturedImage[] {
     return this.images.filter(
       (image) =>
-        image.plate.toLowerCase().includes(this.searchPlate.trim().toLowerCase()) &&
+        (image.plate ?? '').toLowerCase().includes(this.searchPlate.trim().toLowerCase()) &&
         (!this.dateFilter || image.date === this.dateFilter) &&
         (!this.accessType || image.type === this.accessType) &&
         (!this.accessStatus || image.status === this.accessStatus),
@@ -95,7 +81,17 @@ export class ImagensComponent {
   dateTime(image: CapturedImage): string {
     return `${image.date.split('-').reverse().join('/')} ${image.time}`;
   }
-  download(image: CapturedImage): void {
-    this.message = `O arquivo ${image.fileName} é demonstrativo e não está disponível para download.`;
+  async download(image: CapturedImage): Promise<void> {
+    if (!image.available) {
+      this.message = 'Este registro demonstrativo não possui arquivo.';
+      return;
+    }
+    try {
+      await this.api.download('/imagens/' + image.id + '/arquivo', image.fileName);
+    } catch (error) {
+      this.message = this.api.error(error);
+    } finally {
+      this.cdr.markForCheck();
+    }
   }
 }
