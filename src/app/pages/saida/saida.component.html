@@ -3,6 +3,14 @@
     <h2>Registrar Saída</h2>
     <p>Localize o veículo estacionado e confirme sua saída</p>
   </div>
+  <div class="toolbar">
+    <button class="btn btn-secondary" type="button" [disabled]="busy" (click)="openGate()">
+      Abrir Portão
+    </button>
+  </div>
+  @if (gateMessage) {
+    <p role="status">{{ gateMessage }}</p>
+  }
   <section class="card">
     <div class="card-body field">
       <label for="exit-search">Buscar por placa, proprietário, marca ou modelo</label>
@@ -46,7 +54,9 @@
               <td>{{ v.model }}</td>
               <td>{{ v.entryTime }}</td>
               <td>
-                <button class="btn btn-danger" (click)="exit(v.plate)">Registrar Saída</button>
+                <button class="btn btn-danger" (click)="exit(v.plate)" [disabled]="busy">
+                  Registrar Saída
+                </button>
               </td>
             </tr>
           }
@@ -58,3 +68,7 @@
     }
   </section>
 </div>
+
+@if (error) {
+  <p role="alert">{{ error }}</p>
+}
