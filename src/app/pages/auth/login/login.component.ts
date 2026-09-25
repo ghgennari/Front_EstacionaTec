@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-
+import { ParkingRegistryService } from '../../../core/services/parking-registry.service';
 @Component({
   selector: 'app-login',
   standalone: false,
@@ -8,16 +8,26 @@ import { Router } from '@angular/router';
   styleUrl: './login.component.css',
 })
 export class LoginComponent {
+  private readonly api = inject(ParkingRegistryService);
+  private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
   email = '';
   password = '';
   showPassword = false;
   error = '';
-  constructor(private router: Router) {}
-  login(): void {
-    this.error =
-      !this.email || this.password.length < 6
-        ? 'Informe o usuário e uma senha com pelo menos 6 caracteres.'
-        : '';
-    if (!this.error) this.router.navigate(['/dashboard']);
+  busy = false;
+  async login(): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await this.api.login(this.email, this.password);
+      await this.router.navigate(['/dashboard']);
+    } catch (error) {
+      this.error = this.api.error(error);
+    } finally {
+      this.busy = false;
+      this.cdr.markForCheck();
+    }
   }
 }
