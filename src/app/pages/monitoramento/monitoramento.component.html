@@ -2,95 +2,74 @@
   <div class="camera-grid">
     <section class="card camera-panel" #cameraPanel>
       <div class="camera-view">
-        <span class="camera-label">CAM-01 • Entrada Principal</span>
+        <video
+          #webcamVideo
+          autoplay
+          muted
+          playsinline
+          [hidden]="!stream"
+          aria-label="Imagem ao vivo da webcam"
+        ></video>
+        @if (previewUrl && !stream) {
+          <img
+            [src]="previewUrl"
+            alt="Imagem ao vivo da câmera IP"
+            style="max-width: 100%; max-height: 100%"
+          />
+        }
+        <span class="camera-label">{{
+          source === 'WEBCAM' ? 'Webcam do notebook' : 'Câmera IP'
+        }}</span>
         <time class="camera-time">{{ currentTime.toLocaleString('pt-BR') }}</time>
-        <div class="camera-placeholder">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            aria-hidden="true"
-          >
-            <path d="M3 7h4l2-3h6l2 3h4v13H3z" />
-            <circle cx="12" cy="13" r="4" />
-          </svg>
-          <p>Feed da câmera ao vivo</p>
-          <small>Prévia demonstrativa • câmera não conectada</small>
-        </div>
-        <div class="detection-zone" aria-hidden="true"></div>
+        @if (!stream && !previewUrl) {
+          <div class="camera-placeholder">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M3 7h4l2-3h6l2 3h4v13H3z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            <p>Imagem da câmera</p>
+            <small>{{
+              source === 'WEBCAM'
+                ? 'Ative a webcam para visualizar a imagem.'
+                : 'Conectando à transmissão da câmera IP...'
+            }}</small>
+          </div>
+        }
       </div>
       <div class="camera-controls">
         <button class="btn btn-secondary" type="button" (click)="refresh()" [disabled]="refreshing">
           {{ refreshing ? 'Atualizando...' : 'Atualizar' }}
         </button>
-        <button class="btn btn-primary" type="button" (click)="capture()">Capturar Imagem</button>
+        @if (source === 'WEBCAM') {
+          <button
+            class="btn btn-secondary"
+            type="button"
+            (click)="stream || connecting ? stopWebcam() : startWebcam()"
+          >
+            {{ connecting ? 'Cancelar conexão' : stream ? 'Desligar webcam' : 'Ativar webcam' }}
+          </button>
+        }
+        <button
+          class="btn btn-primary"
+          type="button"
+          (click)="capture()"
+          [disabled]="capturing || !source || (source === 'WEBCAM' && (!stream || connecting))"
+        >
+          {{ capturing ? 'Salvando...' : 'Capturar Imagem' }}
+        </button>
         <button class="btn btn-secondary" type="button" (click)="fullscreen(cameraPanel)">
           Tela Cheia
         </button>
       </div>
     </section>
-    <aside class="page-stack">
-      <section class="card">
-        <div class="card-header">
-          <h3>Eventos Recentes</h3>
-          <p>Últimas detecções de placa • demonstração</p>
-        </div>
-        <div class="events">
-          @for (event of recentEvents; track event.plate) {
-            <article class="event">
-              <div class="toolbar">
-                <strong>{{ event.plate }}</strong
-                ><span
-                  class="badge"
-                  [class.badge-success]="event.status === 'Autorizado'"
-                  [class.denied]="event.status === 'Negado'"
-                  >{{ event.status }}</span
-                >
-              </div>
-              <p>{{ event.owner }}</p>
-              <span class="muted">{{ event.time }}</span>
-              <button class="details" type="button" (click)="selectedEvent = event">
-                Ver detalhes
-              </button>
-            </article>
-          }
-        </div>
-      </section>
-      <div class="grid grid-2">
-        <article class="summary authorized"><small>Autorizados</small><strong>125</strong></article>
-        <article class="summary denied"><small>Negados</small><strong>3</strong></article>
-      </div>
-    </aside>
   </div>
-  <p role="status">{{ message }}</p>
-  @if (selectedEvent; as event) {
-    <div class="modal-backdrop" (keydown.escape)="selectedEvent = null">
-      <section
-        class="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="event-title"
-        tabindex="-1"
-      >
-        <div class="card-header toolbar">
-          <h3 id="event-title">Detalhes do evento</h3>
-          <button
-            class="btn btn-secondary"
-            (click)="selectedEvent = null"
-            aria-label="Fechar detalhes"
-          >
-            ×
-          </button>
-        </div>
-        <div class="card-body">
-          <p>Placa: {{ event.plate }}</p>
-          <p>Proprietário: {{ event.owner }}</p>
-          <p>Horário: {{ event.time }}</p>
-          <p>Status: {{ event.status }}</p>
-          <p class="muted">Registro demonstrativo, sem imagem associada.</p>
-        </div>
-      </section>
-    </div>
+  @if (message) {
+    <p role="status">{{ message }}</p>
   }
 </div>

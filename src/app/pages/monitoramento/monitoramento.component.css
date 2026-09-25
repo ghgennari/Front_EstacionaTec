@@ -1,6 +1,6 @@
 .camera-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
   align-items: start;
 }
@@ -40,12 +40,16 @@
   height: 80px;
   color: #6b7280;
 }
-.detection-zone {
+.camera-view video,
+.camera-view img {
   position: absolute;
-  inset: 33% 25%;
-  border: 2px dashed #3b82f680;
-  border-radius: 8px;
-  pointer-events: none;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.camera-view video[hidden] {
+  display: none;
 }
 .camera-controls {
   display: flex;
@@ -64,41 +68,6 @@
 }
 .camera-panel:fullscreen .camera-view {
   flex: 1;
-}
-.event {
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
-}
-.event p {
-  font-size: 14px;
-}
-.events {
-  max-height: 600px;
-  overflow: auto;
-}
-.details {
-  border: 0;
-  background: none;
-  color: #2563eb;
-  margin-left: 12px;
-}
-.summary {
-  padding: 16px;
-  border: 1px solid currentColor;
-  border-radius: 8px;
-}
-.summary strong {
-  display: block;
-  font-size: 22px;
-  margin-top: 8px;
-}
-.authorized {
-  color: #15803d;
-  background: #f0fdf4;
-}
-.denied {
-  color: #b91c1c;
-  background: #fef2f2;
 }
 button:disabled {
   opacity: 0.6;
