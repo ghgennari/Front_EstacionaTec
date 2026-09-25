@@ -1,3 +1,4 @@
+import { authGuard, adminGuard } from './core/auth.guard';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { MonitoramentoComponent } from './pages/monitoramento/monitoramento.component';
@@ -21,6 +22,8 @@ const routes: Routes = [
   {
     path: '',
     component: MainLayoutComponent,
+    canActivate: [authGuard],
+    canActivateChild: [authGuard],
     children: [
       {
         path: 'monitoramento',
@@ -32,10 +35,10 @@ const routes: Routes = [
       { path: 'entrada', component: EntradaComponent, data: { title: 'Registrar Entrada' } },
       { path: 'saida', component: SaidaComponent, data: { title: 'Registrar Saída' } },
       { path: 'veiculos', component: VeiculosComponent, data: { title: 'Veículos' } },
-      { path: 'pessoas', component: PessoasComponent, data: { title: 'Pessoas' } },
+      { path: 'pessoas', canActivate: [adminGuard], component: PessoasComponent, data: { title: 'Pessoas' } },
       { path: 'historico', component: HistoricoComponent, data: { title: 'Histórico' } },
-      { path: 'relatorios', component: RelatoriosComponent, data: { title: 'Relatórios' } },
-      { path: 'usuarios', component: UsuariosComponent, data: { title: 'Usuários' } },
+      { path: 'relatorios', canActivate: [adminGuard], component: RelatoriosComponent, data: { title: 'Relatórios' } },
+      { path: 'usuarios', canActivate: [adminGuard], component: UsuariosComponent, data: { title: 'Usuários' } },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
   },
