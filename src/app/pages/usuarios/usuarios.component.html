@@ -1,3 +1,6 @@
+@if (error && !modal && !pendingDelete) {
+  <p role="alert">{{ error }}</p>
+}
 <div class="page-stack">
   <div class="toolbar">
     <div class="page-title">
@@ -51,9 +54,9 @@
                   type="button"
                   class="btn btn-danger"
                   (click)="pendingDelete = u"
-                  [attr.aria-label]="'Excluir usuário ' + u.name"
+                  [attr.aria-label]="'Desativar usuário ' + u.name"
                 >
-                  Excluir
+                  Desativar
                 </button>
               </td>
             </tr>
@@ -132,9 +135,12 @@
             </select>
           </div>
         </div>
+        @if (error) {
+          <p role="alert">{{ error }}</p>
+        }
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-          <button class="btn btn-primary">
+          <button class="btn btn-primary" [disabled]="busy">
             {{ editingUser ? 'Salvar alterações' : 'Criar Usuário' }}
           </button>
         </div>
@@ -148,14 +154,14 @@
 @if (pendingDelete; as user) {
   <div class="modal-backdrop">
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-user-title">
-      <div class="card-header"><h3 id="delete-user-title">Excluir usuário</h3></div>
+      <div class="card-header"><h3 id="delete-user-title">Desativar usuário</h3></div>
       <div class="card-body">
-        <p>Deseja excluir o usuário {{ user.name }} ({{ user.username }})?</p>
+        <p>Deseja desativar o usuário {{ user.name }} ({{ user.username }})?</p>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" (click)="pendingDelete = null">
             Cancelar
           </button>
-          <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="busy">
             Confirmar exclusão
           </button>
         </div>

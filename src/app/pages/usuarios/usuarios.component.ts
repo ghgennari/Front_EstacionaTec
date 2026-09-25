@@ -1,120 +1,91 @@
-import { Component } from '@angular/core';
-
-interface SystemUser {
-  name: string;
-  username: string;
-  email: string;
-  role: string;
-  status: string;
-}
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ParkingRegistryService, SystemUser } from '../../core/services/parking-registry.service';
 @Component({
   selector: 'app-usuarios',
   standalone: false,
   templateUrl: './usuarios.component.html',
 })
-export class UsuariosComponent {
+export class UsuariosComponent implements OnInit {
+  private readonly api = inject(ParkingRegistryService);
+  private readonly cdr = inject(ChangeDetectorRef);
   search = '';
   modal = false;
+  busy = false;
   editingUser: SystemUser | null = null;
   pendingDelete: SystemUser | null = null;
   error = '';
-  form = { name: '', username: '', email: '', role: 'Porteiro', status: 'Ativo', password: '' };
-  users: SystemUser[] = [
-    {
-      name: 'João Carlos',
-      username: 'joao.carlos',
-      email: 'joao@edu.br',
-      role: 'Administrador',
-      status: 'Ativo',
-    },
-    {
-      name: 'Marcos Oliveira',
-      username: 'marcos.oliveira',
-      email: 'marcos@edu.br',
-      role: 'Porteiro',
-      status: 'Ativo',
-    },
-    {
-      name: 'Juliana Souza',
-      username: 'juliana.souza',
-      email: 'juliana@edu.br',
-      role: 'Porteiro',
-      status: 'Inativo',
-    },
-  ];
+  users: SystemUser[] = [];
+  form = this.emptyForm();
+  private emptyForm() {
+    return { name: '', username: '', email: '', role: 'Porteiro', status: 'Ativo', password: '' };
+  }
   get filtered() {
     return this.users.filter((u) =>
       Object.values(u).join(' ').toLowerCase().includes(this.search.toLowerCase()),
     );
   }
-  get administrators(): number {
-    return this.users.filter((user) => user.role === 'Administrador').length;
+  get administrators() {
+    return this.users.filter((u) => u.role === 'Administrador').length;
   }
-
-  get gatekeepers(): number {
-    return this.users.filter((user) => user.role === 'Porteiro').length;
+  get gatekeepers() {
+    return this.users.filter((u) => u.role === 'Porteiro').length;
   }
-
+  async ngOnInit(): Promise<void> {
+    try {
+      this.users = await this.api.request<SystemUser[]>('GET', '/usuarios');
+    } catch (error) {
+      this.error = this.api.error(error);
+    } finally {
+      this.cdr.markForCheck();
+    }
+  }
   openCreate(): void {
     this.closeModal();
     this.modal = true;
   }
-
   edit(user: SystemUser): void {
     this.editingUser = user;
     this.form = { ...user, password: '' };
     this.error = '';
     this.modal = true;
   }
-
   closeModal(): void {
     this.modal = false;
     this.editingUser = null;
     this.error = '';
-    this.form = {
-      name: '',
-      username: '',
-      email: '',
-      role: 'Porteiro',
-      status: 'Ativo',
-      password: '',
-    };
+    this.form = this.emptyForm();
   }
-
-  confirmDelete(): void {
-    if (!this.pendingDelete) return;
-    this.users = this.users.filter((user) => user !== this.pendingDelete);
-    this.pendingDelete = null;
+  async confirmDelete(): Promise<void> {
+    if (!this.pendingDelete || this.busy) return;
+    this.busy = true;
+    try {
+      await this.api.request('DELETE', '/usuarios/' + this.pendingDelete.id);
+      this.pendingDelete = null;
+      await this.ngOnInit();
+    } catch (error) {
+      this.error = this.api.error(error);
+    } finally {
+      this.busy = false;
+      this.cdr.markForCheck();
+    }
   }
-
-  save(): void {
-    const { password, ...data } = this.form;
-    const user = {
-      ...data,
-      name: data.name.trim(),
-      username: data.username.trim(),
-      email: data.email.trim(),
-    };
-    if (!user.name || !user.username || !user.email) {
-      this.error = 'Preencha nome, usuário e e-mail.';
-      return;
+  async save(): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await this.api.request(
+        this.editingUser ? 'PUT' : 'POST',
+        '/usuarios' + (this.editingUser ? '/' + this.editingUser.id : ''),
+        this.form,
+      );
+      this.closeModal();
+      await this.ngOnInit();
+    } catch (error) {
+      this.error = this.api.error(error);
+    } finally {
+      this.busy = false;
+      this.cdr.markForCheck();
     }
-    if (!this.editingUser && password.length < 6) {
-      this.error = 'A senha deve conter pelo menos 6 caracteres.';
-      return;
-    }
-    if (
-      this.users.some(
-        (item) =>
-          item !== this.editingUser && item.username.toLowerCase() === user.username.toLowerCase(),
-      )
-    ) {
-      this.error = 'Já existe um cadastro com este nome de usuário.';
-      return;
-    }
-    this.users = this.editingUser
-      ? this.users.map((item) => (item === this.editingUser ? user : item))
-      : [...this.users, user];
-    this.closeModal();
   }
 }
