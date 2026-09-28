@@ -1,3 +1,4 @@
+import { createRequestId } from '../../core/request-id';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import {
   ParkingRegistryService,
@@ -16,7 +17,7 @@ export class SaidaComponent implements OnInit {
   gateMessage = '';
   busy = false;
   vehicles: Array<HistoryRecord & { entryTime: string }> = [];
-  private requestId = crypto.randomUUID();
+  private requestId = createRequestId();
   get filtered() {
     const text = this.search.trim().toLowerCase();
     const plate = text.replace(/[-\s]/g, '');
@@ -46,7 +47,7 @@ export class SaidaComponent implements OnInit {
     this.entry = null;
     this.error = '';
     this.gateMessage = '';
-    this.requestId = crypto.randomUUID();
+    this.requestId = createRequestId();
   }
   async submit(): Promise<void> {
     if (this.busy) return;
@@ -64,7 +65,7 @@ export class SaidaComponent implements OnInit {
       this.plate = result.plate;
       this.confirmed = result.plate;
       this.gateMessage = result.warning ?? 'Abertura confirmada pelo ESP32.';
-      this.requestId = crypto.randomUUID();
+      this.requestId = createRequestId();
       await this.reload();
     } catch (error) {
       this.error = this.api.error(error);
@@ -75,7 +76,7 @@ export class SaidaComponent implements OnInit {
   }
   async exit(plate: string): Promise<void> {
     if (this.busy) return;
-    if (this.plate !== plate) this.requestId = crypto.randomUUID();
+    if (this.plate !== plate) this.requestId = createRequestId();
     this.plate = plate;
     await this.submit();
   }

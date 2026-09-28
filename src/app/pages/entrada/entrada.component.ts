@@ -1,3 +1,4 @@
+import { createRequestId } from '../../core/request-id';
 import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ParkingRegistryService, EntryRecord } from '../../core/services/parking-registry.service';
@@ -21,12 +22,12 @@ export class EntradaComponent {
   visitorModel = '';
   visitorError = '';
   @ViewChild('visitorDialog', { static: true }) private visitorDialog?: ElementRef<HTMLDialogElement>;
-  private requestId = crypto.randomUUID();
+  private requestId = createRequestId();
   clearFeedback(): void {
     this.entry = null;
     this.error = '';
     this.gateMessage = '';
-    this.requestId = crypto.randomUUID();
+    this.requestId = createRequestId();
   }
   async submit(): Promise<void> {
     if (this.busy || this.visitorOpen) return;
@@ -48,7 +49,7 @@ export class EntradaComponent {
     event?.preventDefault();
     if (this.busy) return;
     this.closeVisitor();
-    this.requestId = crypto.randomUUID();
+    this.requestId = createRequestId();
   }
 
   private closeVisitor(): void {
@@ -74,7 +75,7 @@ export class EntradaComponent {
       this.entry = result;
       this.plate = result.plate;
       this.gateMessage = result.warning ?? 'Abertura confirmada pelo ESP32.';
-      this.requestId = crypto.randomUUID();
+      this.requestId = createRequestId();
       if (this.visitorOpen) this.closeVisitor();
     } catch (error) {
       if (!visitor && error instanceof HttpErrorResponse && error.status === 409
