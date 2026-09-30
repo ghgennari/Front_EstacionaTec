@@ -41,12 +41,6 @@ form {
   gap: 18px;
   text-align: left;
 }
-form > a {
-  text-align: right;
-  color: #2563eb;
-  text-decoration: none;
-  font-size: 14px;
-}
 .password {
   position: relative;
 }

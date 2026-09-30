@@ -5,7 +5,6 @@ import { MonitoramentoComponent } from './pages/monitoramento/monitoramento.comp
 import { ImagensComponent } from './pages/imagens/imagens.component';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { LoginComponent } from './pages/auth/login/login.component';
-import { RecuperarSenhaComponent } from './pages/auth/recuperar-senha/recuperar-senha.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { EntradaComponent } from './pages/entrada/entrada.component';
 import { HistoricoComponent } from './pages/historico/historico.component';
@@ -18,7 +17,6 @@ import { VeiculosComponent } from './pages/veiculos/veiculos.component';
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: 'login', component: LoginComponent },
-  { path: 'recuperar-senha', component: RecuperarSenhaComponent },
   {
     path: '',
     component: MainLayoutComponent,
