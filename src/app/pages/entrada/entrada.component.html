@@ -6,10 +6,14 @@
       </span>
       <div>
         <h2>Registrar Entrada</h2>
-        <p>Digite a placa do veículo para autorizar entrada</p>
+        <p>Confira a placa lida pela câmera ou digite para registrar a entrada.</p>
       </div>
     </div>
 
+    <p role="status" aria-live="polite">{{ ocrMessage }}</p>
+    @if (detectedPlate) {
+      <p>Placa na câmera: <strong>{{ detectedPlate }}</strong></p>
+    }
     <form (ngSubmit)="submit()" novalidate>
       <label for="entry-plate">Placa do Veículo</label>
       <input
@@ -27,6 +31,9 @@
         [attr.aria-describedby]="error ? 'entry-error' : null"
       />
       <div class="entry-actions">
+        <button class="gate-button" type="button" (click)="nextVehicle()" [disabled]="busy || visitorOpen">
+          Próximo veículo
+        </button>
         <button class="register-button" type="submit" [disabled]="busy || visitorOpen">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M14 3h6v18h-6M3 12h12m-5-5 5 5-5 5" />

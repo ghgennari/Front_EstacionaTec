@@ -1,5 +1,7 @@
 import { createRequestId } from '../../core/request-id';
-import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { OcrService, OcrState } from '../../core/services/ocr.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ParkingRegistryService, EntryRecord } from '../../core/services/parking-registry.service';
 @Component({
@@ -8,7 +10,12 @@ import { ParkingRegistryService, EntryRecord } from '../../core/services/parking
   templateUrl: './entrada.component.html',
   styleUrl: './entrada.component.css',
 })
-export class EntradaComponent {
+export class EntradaComponent implements OnInit, OnDestroy {
+  private readonly ocr = inject(OcrService);
+  private ocrSubscription?: Subscription;
+  private lastDetection: string | null = null;
+  ocrMessage = 'Iniciando leitura automática da câmera...';
+  detectedPlate = '';
   private readonly api = inject(ParkingRegistryService);
   private readonly cdr = inject(ChangeDetectorRef);
   plate = '';
@@ -23,6 +30,35 @@ export class EntradaComponent {
   visitorError = '';
   @ViewChild('visitorDialog', { static: true }) private visitorDialog?: ElementRef<HTMLDialogElement>;
   private requestId = createRequestId();
+  ngOnInit(): void {
+    this.ocrSubscription = this.ocr.states.subscribe((state) => this.receiveOcr(state));
+  }
+
+  receiveOcr(state: OcrState): void {
+    this.ocrMessage = state.message;
+    this.detectedPlate = state.plate ?? '';
+    const fresh = state.detectedAt && Date.now() - Date.parse(state.detectedAt) < 20000;
+    if (fresh && state.status === 'DETECTADA' && state.detectionId && state.plate
+        && state.detectionId !== this.lastDetection && !this.busy && !this.visitorOpen) {
+      if (!this.plate.trim()) {
+        this.plate = state.plate;
+        this.clearFeedback();
+        this.lastDetection = state.detectionId;
+      }
+    }
+    this.cdr.markForCheck();
+  }
+
+  nextVehicle(): void {
+    if (this.busy || this.visitorOpen) return;
+    this.plate = '';
+    this.clearFeedback();
+  }
+
+  ngOnDestroy(): void {
+    this.ocrSubscription?.unsubscribe();
+  }
+
   clearFeedback(): void {
     this.entry = null;
     this.error = '';
