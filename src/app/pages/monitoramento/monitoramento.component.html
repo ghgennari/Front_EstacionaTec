@@ -72,4 +72,13 @@
   @if (message) {
     <p role="status">{{ message }}</p>
   }
+  @if (ocrState; as ocr) {
+    <div role="status" aria-live="polite">
+      <p>{{ ocr.message }}</p>
+      @if (ocr.plate) {
+        <p>Placa identificada: <strong>{{ ocr.plate }}</strong></p>
+        <a class="btn btn-primary" routerLink="/entrada">Conferir entrada</a>
+      }
+    </div>
+  }
 </div>

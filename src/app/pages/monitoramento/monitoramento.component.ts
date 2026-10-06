@@ -11,6 +11,8 @@ import {
   ParkingRegistryService,
   CapturedImage,
 } from '../../core/services/parking-registry.service';
+import { Subscription } from 'rxjs';
+import { OcrService, OcrState } from '../../core/services/ocr.service';
 
 @Component({
   selector: 'app-monitoramento',
@@ -19,6 +21,9 @@ import {
   styleUrl: './monitoramento.component.css',
 })
 export class MonitoramentoComponent implements OnInit, OnDestroy {
+  private readonly ocr = inject(OcrService);
+  private ocrSubscription?: Subscription;
+  ocrState: OcrState | null = null;
   private readonly api = inject(ParkingRegistryService);
   private readonly cdr = inject(ChangeDetectorRef);
   @ViewChild('webcamVideo', { static: true }) webcamVideo!: ElementRef<HTMLVideoElement>;
@@ -42,6 +47,10 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
   }, 1000);
 
   async ngOnInit(): Promise<void> {
+    this.ocrSubscription = this.ocr.states.subscribe((state) => {
+      this.ocrState = state;
+      this.cdr.markForCheck();
+    });
     await this.refresh();
     if (!this.destroyed) this.timer = setInterval(() => void this.refresh(), 10000);
   }
@@ -227,6 +236,7 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.ocrSubscription?.unsubscribe();
     this.destroyed = true;
     this.stopWebcam();
     clearInterval(this.clock);
