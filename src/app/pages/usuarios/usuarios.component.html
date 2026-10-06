@@ -108,18 +108,22 @@
             <label>E-mail *</label
             ><input class="input" type="email" name="email" [(ngModel)]="form.email" />
           </div>
-          @if (!editingUser) {
-            <div class="field">
-              <label>Senha *</label
-              ><input
-                class="input"
-                type="password"
-                name="password"
-                [(ngModel)]="form.password"
-                placeholder="Mínimo 6 caracteres"
-              />
-            </div>
-          }
+          <div class="field">
+            <label for="user-password">{{ editingUser ? 'Nova senha' : 'Senha *' }}</label>
+            <input
+              id="user-password"
+              class="input"
+              type="password"
+              name="password"
+              autocomplete="new-password"
+              [(ngModel)]="form.password"
+              placeholder="Mínimo 6 caracteres"
+              [attr.aria-describedby]="editingUser ? 'user-password-help' : null"
+            />
+            @if (editingUser) {
+              <small id="user-password-help">Deixe em branco para manter a senha atual.</small>
+            }
+          </div>
           <div class="field">
             <label>Nível de acesso</label
             ><select class="input" name="role" [(ngModel)]="form.role">
