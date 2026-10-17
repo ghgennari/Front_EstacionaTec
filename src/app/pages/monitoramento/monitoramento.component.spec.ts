@@ -126,7 +126,7 @@ describe('Monitoramento com webcam e câmera IP', () => {
       callback(new Blob(['jpeg'], { type: 'image/jpeg' })),
     );
     const pending = component.capture();
-    const request = await vi.waitFor(() => http.expectOne('/api/camera/webcam/capturar'));
+    const request = await vi.waitFor(() => http.expectOne('/api/camera/local/capturar'));
     http.expectNone('/api/camera/capturar');
     expect(request.request.method).toBe('POST');
     expect(request.request.body.get('file').name).toBe('webcam.jpg');
@@ -144,7 +144,7 @@ describe('Monitoramento com webcam e câmera IP', () => {
     await component.startWebcam();
     await component.capture();
     expect(component.message).toContain('aguarde a imagem');
-    http.expectNone('/api/camera/webcam/capturar');
+    http.expectNone('/api/camera/local/capturar');
     fixture.destroy();
     http.verify();
   });

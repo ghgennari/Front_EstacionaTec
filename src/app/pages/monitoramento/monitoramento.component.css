@@ -91,3 +91,6 @@ button:disabled {
     font-size: 10px;
   }
 }
+
+.camera-choice { display: grid; gap: 10px; padding: 16px; }
+.camera-choice select { padding: 10px; font: inherit; }

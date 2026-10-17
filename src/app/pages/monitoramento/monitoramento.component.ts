@@ -1,3 +1,4 @@
+import { createRequestId } from '../../core/request-id';
 import {
   ChangeDetectorRef,
   Component,
@@ -34,6 +35,11 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
   diagnosing = false;
   diagnosticMessage = '';
   source: 'WEBCAM' | 'IP' | null = null;
+  private selectedSource: 'WEBCAM' | 'IP' | null = null;
+  private webcamOcrTimer?: ReturnType<typeof setTimeout>;
+  private webcamSession = createRequestId();
+  private webcamOcrBusy = false;
+  get isAdmin(): boolean { return this.api.user()?.role === 'Administrador'; }
   stream: MediaStream | null = null;
   message = '';
   previewUrl = '';
@@ -49,10 +55,6 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
   }, 1000);
 
   async ngOnInit(): Promise<void> {
-    this.ocrSubscription = this.ocr.states.subscribe((state) => {
-      this.ocrState = state;
-      this.cdr.markForCheck();
-    });
     await this.refresh();
     if (!this.destroyed) this.timer = setInterval(() => void this.refresh(), 10000);
   }
@@ -65,14 +67,16 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
         'GET', '/camera/status',
       );
       if (this.destroyed) return;
-      if (this.source !== status.source) {
+      const source = this.isAdmin ? this.selectedSource ?? status.source : status.source;
+      if (this.source !== source) {
         this.stopWebcam();
         this.previewGeneration++;
         clearTimeout(this.previewTimer);
         this.clearPreview();
-        this.source = status.source;
+        this.source = source;
         this.message = status.message;
       }
+      this.syncOcr();
       if (this.source === 'IP' && !this.previewLoading) {
         clearTimeout(this.previewTimer);
         void this.updatePreview();
@@ -85,6 +89,62 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
     }
   }
 
+  async selectSource(value: string): Promise<void> {
+    if (!this.isAdmin || (value !== 'IP' && value !== 'WEBCAM') || this.capturing || this.diagnosing) return;
+    this.selectedSource = value;
+    this.stopWebcam();
+    this.previewGeneration++;
+    clearTimeout(this.previewTimer);
+    this.clearPreview();
+    this.source = value;
+    this.ocrState = null;
+    this.diagnosticMessage = '';
+    this.message = value === 'WEBCAM' ? 'Ative a webcam e permita o acesso no navegador.' : 'Conectando à câmera IP...';
+    this.syncOcr();
+    this.cdr.markForCheck();
+    if (value === 'WEBCAM') await this.startWebcam();
+    else if (!this.previewLoading) void this.updatePreview();
+  }
+
+  private syncOcr(): void {
+    if (this.source !== 'IP') {
+      this.ocrSubscription?.unsubscribe();
+      this.ocrSubscription = undefined;
+      return;
+    }
+    if (!this.ocrSubscription) this.ocrSubscription = this.ocr.states.subscribe((state) => {
+      if (this.source === 'IP' && !this.destroyed) this.ocrState = state;
+      this.cdr.markForCheck();
+    });
+  }
+
+  private async readWebcam(generation: number): Promise<void> {
+    if (this.destroyed || generation !== this.generation || this.source !== 'WEBCAM' || !this.stream) return;
+    if (document.hidden || this.webcamOcrBusy || this.diagnosing) {
+      this.webcamOcrTimer = setTimeout(() => void this.readWebcam(generation), 1500);
+      return;
+    }
+    this.webcamOcrBusy = true;
+    try {
+      const frame = await this.webcamFrame();
+      if (this.destroyed || generation !== this.generation) return;
+      const form = new FormData();
+      form.append('file', frame, 'webcam.jpg');
+      form.append('session', this.webcamSession);
+      const state = await this.api.request<OcrState>('POST', '/camera/local/ocr', form);
+      if (!this.destroyed && generation === this.generation) this.ocrState = state;
+    } catch (error) {
+      if (!this.destroyed && generation === this.generation) this.ocrState = {
+        enabled: true, status: 'INDISPONIVEL', message: this.api.error(error),
+        detectionId: null, plate: null, confidence: null, detectedAt: null,
+      };
+    } finally {
+      this.webcamOcrBusy = false;
+      if (!this.destroyed && generation === this.generation && this.stream)
+        this.webcamOcrTimer = setTimeout(() => void this.readWebcam(generation), 1500);
+      this.cdr.markForCheck();
+    }
+  }
   private async updatePreview(): Promise<void> {
     if (this.destroyed || this.source !== 'IP' || this.previewLoading) return;
     if (document.hidden) {
@@ -147,6 +207,8 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
       if (this.destroyed || generation !== this.generation) return;
       this.clearPreview();
       this.message = 'Webcam ativa. Use Capturar Imagem para salvar uma foto.';
+      this.webcamSession = createRequestId();
+      if (this.isAdmin) this.webcamOcrTimer = setTimeout(() => void this.readWebcam(generation), 1500);
     } catch (error) {
       if (this.destroyed || generation !== this.generation) return;
       this.stopWebcam();
@@ -166,6 +228,7 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
   }
 
   stopWebcam(): void {
+    clearTimeout(this.webcamOcrTimer);
     this.generation++;
     this.connecting = false;
     this.stream?.getTracks().forEach((track) => {
@@ -204,8 +267,13 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
     this.diagnosing = true;
     this.diagnosticMessage = 'Testando leitura do quadro atual...';
     try {
+      let body: FormData | undefined;
+      if (this.source === 'WEBCAM') {
+        body = new FormData();
+        body.append('file', await this.webcamFrame(), 'webcam.jpg');
+      }
       const result = await this.api.request<{ message: string; elapsedMs: number }>(
-        'POST', '/camera/ocr/diagnosticar');
+        'POST', this.source === 'WEBCAM' ? '/camera/ocr/testar' : '/camera/ocr/diagnosticar', body);
       this.diagnosticMessage = `${result.message} Tempo: ${result.elapsedMs} ms.`;
     } catch (error) {
       this.diagnosticMessage = this.api.error(error);
@@ -224,7 +292,7 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
         if (this.destroyed) return;
         const form = new FormData();
         form.append('file', frame, 'webcam.jpg');
-        image = await this.api.request<CapturedImage>('POST', '/camera/webcam/capturar', form);
+        image = await this.api.request<CapturedImage>('POST', this.isAdmin ? '/camera/local/capturar' : '/camera/webcam/capturar', form);
       } else if (this.source === 'IP') {
         image = await this.api.request<CapturedImage>('POST', '/camera/capturar');
       } else {

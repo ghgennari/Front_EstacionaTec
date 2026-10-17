@@ -1,4 +1,16 @@
 <div class="page-stack">
+  @if (isAdmin) {
+    <div class="card camera-choice">
+      <label for="camera-source">Câmera utilizada nesta tela</label>
+      <select id="camera-source" [ngModel]="source" (ngModelChange)="selectSource($event)"
+        [disabled]="capturing || diagnosing">
+        <option [ngValue]="null" disabled>Selecione a câmera</option>
+        <option value="IP">Câmera IP</option>
+        <option value="WEBCAM">Câmera deste computador (webcam)</option>
+      </select>
+      <small>A escolha vale para esta tela. Para usar a webcam, acesse por HTTPS e permita a câmera no navegador.</small>
+    </div>
+  }
   <div class="camera-grid">
     <section class="card camera-panel" #cameraPanel>
       <div class="camera-view">
@@ -18,7 +30,7 @@
           />
         }
         <span class="camera-label">{{
-          source === 'WEBCAM' ? 'Webcam do notebook' : 'Câmera IP'
+          source === 'WEBCAM' ? 'Webcam deste computador' : 'Câmera IP'
         }}</span>
         <time class="camera-time">{{ currentTime.toLocaleString('pt-BR') }}</time>
         @if (!stream && !previewUrl) {
@@ -83,8 +95,8 @@
   }
 </div>
 
-@if (source === 'IP') {
-  <p>Entradas automáticas para veículos cadastrados e autorizados enquanto esta tela ou Registrar Entrada estiver aberta.</p>
-  <button type="button" (click)="diagnoseOcr()" [disabled]="diagnosing">Testar leitura OCR</button>
+@if (source === 'IP' || (source === 'WEBCAM' && isAdmin)) {
+  <p>Entradas automáticas para veículos cadastrados e autorizados. Na webcam, mantenha esta tela aberta e visível; na IP, também é possível acompanhar por Registrar Entrada.</p>
+  <button type="button" (click)="diagnoseOcr()" [disabled]="diagnosing || (source === 'WEBCAM' && !stream)">Testar leitura OCR</button>
   <p role="status" aria-live="polite">{{ diagnosticMessage }}</p>
 }
