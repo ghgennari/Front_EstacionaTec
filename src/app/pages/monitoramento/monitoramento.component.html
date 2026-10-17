@@ -82,3 +82,9 @@
     </div>
   }
 </div>
+
+@if (source === 'IP') {
+  <p>Entradas automáticas para veículos cadastrados e autorizados enquanto esta tela ou Registrar Entrada estiver aberta.</p>
+  <button type="button" (click)="diagnoseOcr()" [disabled]="diagnosing">Testar leitura OCR</button>
+  <p role="status" aria-live="polite">{{ diagnosticMessage }}</p>
+}

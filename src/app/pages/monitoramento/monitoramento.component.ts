@@ -31,6 +31,8 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
   refreshing = false;
   connecting = false;
   capturing = false;
+  diagnosing = false;
+  diagnosticMessage = '';
   source: 'WEBCAM' | 'IP' | null = null;
   stream: MediaStream | null = null;
   message = '';
@@ -56,7 +58,7 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
   }
 
   async refresh(): Promise<void> {
-    if (this.refreshing || this.destroyed) return;
+    if (this.refreshing || this.destroyed || document.hidden) return;
     this.refreshing = true;
     try {
       const status = await this.api.request<{ source: 'WEBCAM' | 'IP'; message: string }>(
@@ -85,9 +87,13 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
 
   private async updatePreview(): Promise<void> {
     if (this.destroyed || this.source !== 'IP' || this.previewLoading) return;
+    if (document.hidden) {
+      this.previewTimer = setTimeout(() => void this.updatePreview(), 1000);
+      return;
+    }
     this.previewLoading = true;
     const generation = this.previewGeneration;
-    let delay = 200;
+    let delay = 1000;
     try {
       const frame = await this.api.blob('/camera/preview');
       if (this.destroyed || generation !== this.previewGeneration) return;
@@ -193,6 +199,21 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
     );
   }
 
+  async diagnoseOcr(): Promise<void> {
+    if (this.diagnosing || this.destroyed) return;
+    this.diagnosing = true;
+    this.diagnosticMessage = 'Testando leitura do quadro atual...';
+    try {
+      const result = await this.api.request<{ message: string; elapsedMs: number }>(
+        'POST', '/camera/ocr/diagnosticar');
+      this.diagnosticMessage = `${result.message} Tempo: ${result.elapsedMs} ms.`;
+    } catch (error) {
+      this.diagnosticMessage = this.api.error(error);
+    } finally {
+      this.diagnosing = false;
+      this.cdr.markForCheck();
+    }
+  }
   async capture(): Promise<void> {
     if (this.capturing || this.destroyed) return;
     this.capturing = true;

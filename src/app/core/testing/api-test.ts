@@ -1,4 +1,6 @@
 import { Type } from '@angular/core';
+import { EMPTY } from 'rxjs';
+import { OcrService } from '../services/ocr.service';
 import { TestBed } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,7 +22,8 @@ export function create<T>(component: Type<T>, role = 'Administrador') {
   TestBed.configureTestingModule({
     declarations: [component],
     imports: [CommonModule, FormsModule, RouterModule],
-    providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
+      { provide: OcrService, useValue: { states: EMPTY } }],
   });
   const fixture = TestBed.createComponent(component);
   return {
