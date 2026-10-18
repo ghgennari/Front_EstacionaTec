@@ -35,6 +35,7 @@ export class UsuariosComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     try {
       this.users = await this.api.request<SystemUser[]>('GET', '/usuarios');
+      for (const user of this.users) this.api.syncUser(user);
     } catch (error) {
       this.error = this.api.error(error);
     } finally {
@@ -78,11 +79,15 @@ export class UsuariosComponent implements OnInit {
     this.busy = true;
     this.error = '';
     try {
-      await this.api.request(
+      const saved = await this.api.request<SystemUser>(
         this.editingUser ? 'PUT' : 'POST',
         '/usuarios' + (this.editingUser ? '/' + this.editingUser.id : ''),
         this.form,
       );
+      if (!saved.personId || saved.document !== this.form.document || saved.phone !== this.form.phone) {
+        throw new Error('A API não confirmou CPF, telefone e vínculo com a pessoa. Atualize o back-end no servidor e salve novamente.');
+      }
+      this.api.syncUser(saved);
       this.closeModal();
       await this.ngOnInit();
     } catch (error) {

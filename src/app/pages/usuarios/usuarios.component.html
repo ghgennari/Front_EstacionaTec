@@ -94,6 +94,9 @@
         </button>
       </div>
       <form class="card-body grid" (ngSubmit)="save()">
+        @if (editingUser?.personId) {
+          <p class="muted">Nome, CPF, telefone e e-mail são compartilhados com o cadastro da pessoa.</p>
+        }
         <div class="field">
           <label>Nome completo *</label><input appDisplayFormat="title" class="identity-text input" name="name" [(ngModel)]="form.name" />
         </div>

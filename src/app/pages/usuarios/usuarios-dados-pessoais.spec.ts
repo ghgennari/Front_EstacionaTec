@@ -29,7 +29,7 @@ describe('CPF e telefone obrigatórios', () => {
       fixture.detectChanges();
       http.expectOne('/api/usuarios').flush([]);
       await new Promise(resolve => setTimeout(resolve, 0));
-      const user = { id: 20, name: 'Pessoa', username: 'pessoa', email: 'pessoa@example.test',
+      const user = { id: 20, personId: 30, name: 'Pessoa', username: 'pessoa', email: 'pessoa@example.test',
         role: 'Porteiro', status: 'Ativo', document: '12345678909', phone };
       component.edit(user);
       fixture.detectChanges();

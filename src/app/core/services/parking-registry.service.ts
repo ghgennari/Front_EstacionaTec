@@ -25,6 +25,7 @@ export interface RegisteredVehicle {
   authorized: boolean;
 }
 export interface SystemUser {
+  personId?: number;
   id: number;
   document?: string | null;
   phone?: string | null;
@@ -180,6 +181,29 @@ export class ParkingRegistryService {
     ]);
     this.peopleState.set(people);
     this.vehiclesState.set(vehicles);
+  }
+
+  syncPerson(person: RegisteredPerson): void {
+    this.peopleState.update(people => people.map(p => p.id === person.id ? person : p));
+    this.vehiclesState.update(vehicles => vehicles.map(v => v.ownerId === person.id
+      ? { ...v, owner: person.name, category: person.type } : v));
+    const current = this.user();
+    if (current && current.personId === person.id) {
+      this.storeCurrentUser({ ...current, name: person.name, email: person.email,
+        document: person.document, phone: person.phone });
+    }
+  }
+
+  syncUser(user: SystemUser): void {
+    const person = this.people.find(p => p.id === user.personId);
+    if (person) this.syncPerson({ ...person, name: user.name, email: user.email,
+      document: user.document ?? null, phone: user.phone ?? '' });
+    if (this.user()?.id === user.id) this.storeCurrentUser(user);
+  }
+
+  private storeCurrentUser(user: SystemUser): void {
+    this.user.set(user);
+    sessionStorage.setItem('estacionatec-user', JSON.stringify(user));
   }
 
   async upload(file: File): Promise<CapturedImage> {

@@ -99,11 +99,12 @@ export class PessoasComponent implements OnInit {
     this.busy = true;
     this.error = '';
     try {
-      await this.api.request(
+      const saved = await this.api.request<RegisteredPerson>(
         this.editingPerson ? 'PUT' : 'POST',
         '/pessoas' + (this.editingPerson ? '/' + this.editingPerson.id : ''),
         { ...this.form, document: normalizeDocument(this.form.document), phone: normalizePhone(this.form.phone) },
       );
+      this.api.syncPerson(saved);
       this.closeModal();
       await this.api.loadRegistry();
     } catch (error) {
