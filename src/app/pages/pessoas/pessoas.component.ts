@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { formatDocument, formatPhone, normalizeDocument, normalizePhone, matchesPersonalData } from '../../core/utils/personal-data';
+import { formatDocument, formatPhone, normalizeDocument, normalizePhone, matchesPersonalData, personalDataError } from '../../core/utils/personal-data';
 import {
   ParkingRegistryService,
   RegisteredPerson,
@@ -94,6 +94,8 @@ export class PessoasComponent implements OnInit {
   }
   async save(): Promise<void> {
     if (this.busy) return;
+    this.error = personalDataError(this.form.document, this.form.phone);
+    if (this.error) return;
     this.busy = true;
     this.error = '';
     try {

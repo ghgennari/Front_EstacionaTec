@@ -120,8 +120,8 @@
         </div>
         <div class="grid grid-2">
           <div class="field">
-            <label>CPF/Documento *</label
-            ><input class="input" name="document" appPersonalMask="document" [(ngModel)]="form.document" />
+            <label>CPF *</label
+            ><input class="input" name="document" inputmode="numeric" required maxlength="14" placeholder="000.000.000-00" appPersonalMask="document" [(ngModel)]="form.document" />
           </div>
           <div class="field">
             <label>Tipo</label
@@ -136,7 +136,7 @@
             <label>E-mail</label><input class="input" name="email" [(ngModel)]="form.email" />
           </div>
           <div class="field">
-            <label>Telefone</label><input class="input" name="phone" type="tel" appPersonalMask="phone" [(ngModel)]="form.phone" />
+            <label>Telefone com DDD *</label><input class="input" name="phone" type="tel" inputmode="numeric" required maxlength="15" placeholder="(11) 99999-9999" appPersonalMask="phone" [(ngModel)]="form.phone" />
           </div>
         </div>
         @if (error) {

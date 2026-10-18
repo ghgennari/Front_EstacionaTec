@@ -44,3 +44,26 @@ describe('Máscaras de dados pessoais', () => {
     expect(formatPhone('5511987652143')).toBe('+55 (11) 98765-2143');
   });
 });
+
+describe('Limites numéricos', () => {
+  it('bloqueia letras e excesso ao digitar e limpa colagens em ambos os campos', async () => {
+    TestBed.configureTestingModule({ imports: [MaskTestModule] });
+    const fixture = TestBed.createComponent(Form);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const inputs = Array.from(fixture.nativeElement.querySelectorAll('input')) as HTMLInputElement[];
+    for (const input of inputs) {
+      input.setSelectionRange(input.value.length, input.value.length);
+      for (const key of ['x', '!', '9']) {
+        const event = new KeyboardEvent('keydown', { key, cancelable: true });
+        input.dispatchEvent(event);
+        expect(event.defaultPrevented).toBe(true);
+      }
+      input.value = 'abc123456789012345!';
+      input.dispatchEvent(new Event('input'));
+      expect(input.value.replace(/[^0-9]/g, '')).toBe('12345678901');
+    }
+    expect(fixture.componentInstance.cpf).toBe('12345678901');
+    expect(fixture.componentInstance.phone).toBe('12345678901');
+  });
+});

@@ -1,6 +1,6 @@
 import { Directive, ElementRef, HostListener, Input, forwardRef, inject } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { formatDocument, formatPhone, normalizeDocument, normalizePhone } from '../utils/personal-data';
+import { formatDocument, formatPhone, normalizePhone } from '../utils/personal-data';
 
 @Directive({
   selector: 'input[appPersonalMask]',
@@ -13,7 +13,7 @@ export class PersonalMaskDirective implements ControlValueAccessor {
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
   private normalize(value: string): string {
-    return this.appPersonalMask === 'phone' ? normalizePhone(value) : normalizeDocument(value);
+    return normalizePhone(value);
   }
   writeValue(value: string | null): void {
     this.element.nativeElement.value = this.appPersonalMask === 'phone' ? formatPhone(value) : formatDocument(value);
@@ -25,9 +25,17 @@ export class PersonalMaskDirective implements ControlValueAccessor {
   @HostListener('input') input(): void {
     const input = this.element.nativeElement;
     const position = this.normalize(input.value.slice(0, input.selectionStart ?? input.value.length)).length;
-    this.update(this.normalize(input.value), position);
+    this.update(this.normalize(input.value).slice(0, 11), Math.min(position, 11));
   }
   @HostListener('keydown', ['$event']) keydown(event: KeyboardEvent): void {
+    if (!event.ctrlKey && !event.metaKey && !event.altKey && event.key.length === 1) {
+      const input = this.element.nativeElement;
+      const selected = input.selectionStart !== input.selectionEnd;
+      if (!/^[0-9]$/.test(event.key) || (!selected && this.normalize(input.value).length >= 11)) {
+        event.preventDefault();
+      }
+      return;
+    }
     if (event.key !== 'Backspace' && event.key !== 'Delete') return;
     const input = this.element.nativeElement;
     const start = input.selectionStart ?? 0;

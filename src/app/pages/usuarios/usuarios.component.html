@@ -101,6 +101,16 @@
         </div>
         <div class="grid grid-2">
           <div class="field">
+            <label for="user-document">CPF *</label>
+            <input id="user-document" class="input" name="document" inputmode="numeric"
+              required maxlength="14" placeholder="000.000.000-00" appPersonalMask="document" [(ngModel)]="form.document" />
+          </div>
+          <div class="field">
+            <label for="user-phone">Telefone com DDD *</label>
+            <input id="user-phone" class="input" name="phone" type="tel" inputmode="numeric"
+              required maxlength="15" placeholder="(11) 99999-9999" appPersonalMask="phone" [(ngModel)]="form.phone" />
+          </div>
+          <div class="field">
             <label>Nome de usuário *</label
             ><input class="input" name="username" [(ngModel)]="form.username" />
           </div>

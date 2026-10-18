@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { normalizeDocument, normalizePhone, personalDataError, matchesPersonalData } from '../../core/utils/personal-data';
 import { ParkingRegistryService, SystemUser } from '../../core/services/parking-registry.service';
 @Component({
   selector: 'app-usuarios',
@@ -17,11 +18,12 @@ export class UsuariosComponent implements OnInit {
   users: SystemUser[] = [];
   form = this.emptyForm();
   private emptyForm() {
-    return { name: '', username: '', email: '', role: 'Porteiro', status: 'Ativo', password: '' };
+    return { name: '', username: '', email: '', document: '', phone: '', role: 'Porteiro', status: 'Ativo', password: '' };
   }
   get filtered() {
     return this.users.filter((u) =>
-      Object.values(u).join(' ').toLowerCase().includes(this.search.toLowerCase()),
+      Object.values(u).join(' ').toLowerCase().includes(this.search.trim().toLowerCase())
+      || matchesPersonalData(this.search.trim(), u.document, u.phone),
     );
   }
   get administrators() {
@@ -45,7 +47,7 @@ export class UsuariosComponent implements OnInit {
   }
   edit(user: SystemUser): void {
     this.editingUser = user;
-    this.form = { ...user, password: '' };
+    this.form = { ...user, document: normalizeDocument(user.document), phone: normalizePhone(user.phone), password: '' };
     this.error = '';
     this.modal = true;
   }
@@ -71,6 +73,8 @@ export class UsuariosComponent implements OnInit {
   }
   async save(): Promise<void> {
     if (this.busy) return;
+    this.error = personalDataError(this.form.document, this.form.phone);
+    if (this.error) return;
     this.busy = true;
     this.error = '';
     try {

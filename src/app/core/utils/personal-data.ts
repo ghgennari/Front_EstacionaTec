@@ -35,3 +35,9 @@ export function matchesPersonalData(query: string, document: string | null | und
   return normalizeDocument(document).toLowerCase().includes(raw)
     || (/^[0-9\s()+.\/-]+$/.test(query) && normalizePhone(phone).includes(raw));
 }
+
+export function personalDataError(document: string, phone: string): string {
+  if (!/^[0-9]{11}$/.test(document)) return 'Informe o CPF com exatamente 11 números.';
+  if (!/^[0-9]{10,11}$/.test(phone)) return 'Informe o telefone com DDD: 10 números para fixo ou 11 para celular.';
+  return '';
+}

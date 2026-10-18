@@ -10,7 +10,8 @@ describe('Pessoas integradas', () => {
     component.ownerDocument = '123';
     expect(component.selectedOwner?.id).toBe(1);
     component.edit(component.people[0]);
-    component.form.document = 'duplicado';
+    component.form.document = '12345678909';
+    component.form.phone = '11987652143';
     const pending = component.save();
     http
       .expectOne('/api/pessoas/1')
@@ -51,8 +52,8 @@ describe('Pessoas sem máscara na API', () => {
       expect(component.filtered.length).toBe(1);
     }
     component.edit(component.people[0]);
-    component.form.document = '123.456.789-09';
-    component.form.phone = '(11) 98765-2143';
+    component.form.document = '12345678909';
+    component.form.phone = '11987652143';
     const saving = component.save();
     const request = http.expectOne('/api/pessoas/1');
     expect(request.request.body.document).toBe('12345678909');

@@ -26,6 +26,8 @@ export interface RegisteredVehicle {
 }
 export interface SystemUser {
   id: number;
+  document?: string | null;
+  phone?: string | null;
   name: string;
   username: string;
   email: string;
