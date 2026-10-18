@@ -29,7 +29,7 @@ describe('Histórico integrado', () => {
     fixture.detectChanges();
     expect(dialog.textContent).toContain('Ana');
     expect(dialog.textContent).toContain('ana@example.com');
-    expect(dialog.textContent).toContain('11999999999');
+    expect(dialog.textContent).toContain('(11) 99999-9999');
     expect(fixture.nativeElement.querySelector('a[href="/pessoas"]')).toBeNull();
     dialog.querySelector('button')!.click();
     expect(dialog.open).toBe(false);

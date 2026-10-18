@@ -76,7 +76,7 @@
       <p class="muted">Dados registrados neste acesso.</p>
       <dl class="grid grid-2 owner-details">
         <div><dt>Nome / responsável</dt><dd>{{ record.owner }}</dd></div>
-        <div><dt>CPF/Documento</dt><dd>{{ record.ownerDocument || 'Não informado' }}</dd></div>
+        <div><dt>CPF/Documento</dt><dd>{{ formatDocument(record.ownerDocument) || 'Não informado' }}</dd></div>
         <div><dt>Tipo</dt><dd>{{ record.category || 'Não informado' }}</dd></div>
         <div><dt>Placa</dt><dd>{{ record.plate }}</dd></div>
         <div><dt>Modelo</dt><dd>{{ record.model || 'Não informado' }}</dd></div>
@@ -89,7 +89,7 @@
         <h4>Contato do cadastro atual</h4>
         <dl class="grid grid-2 owner-details">
           <div><dt>E-mail</dt><dd>{{ person.email || 'Não informado' }}</dd></div>
-          <div><dt>Telefone</dt><dd>{{ person.phone || 'Não informado' }}</dd></div>
+          <div><dt>Telefone</dt><dd>{{ formatPhone(person.phone) || 'Não informado' }}</dd></div>
         </dl>
       } @else if (canViewContact() || !record.ownerDocument) {
         <p class="muted">{{ record.ownerDocument ? 'Cadastro atual não encontrado.' : 'Acesso sem cadastro de pessoa vinculado.' }}</p>

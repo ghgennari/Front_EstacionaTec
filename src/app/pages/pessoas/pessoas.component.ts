@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
+import { formatDocument, formatPhone, normalizeDocument, normalizePhone, matchesPersonalData } from '../../core/utils/personal-data';
 import {
   ParkingRegistryService,
   RegisteredPerson,
@@ -11,6 +12,8 @@ export class PessoasComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
+  readonly formatDocument = formatDocument;
+  readonly formatPhone = formatPhone;
   ownerDocument: string | null = null;
   search = '';
   modal = false;
@@ -24,11 +27,13 @@ export class PessoasComponent implements OnInit {
     return this.api.people;
   }
   get selectedOwner() {
-    return this.people.find((p) => p.document === this.ownerDocument);
+    const document = normalizeDocument(this.ownerDocument);
+    return document ? this.people.find((p) => normalizeDocument(p.document) === document) : undefined;
   }
   get filtered() {
     return this.people.filter((p) =>
-      Object.values(p).join(' ').toLowerCase().includes(this.search.toLowerCase()),
+      Object.values(p).join(' ').toLowerCase().includes(this.search.trim().toLowerCase())
+      || matchesPersonalData(this.search.trim(), p.document, p.phone),
     );
   }
   private emptyForm() {
@@ -54,9 +59,9 @@ export class PessoasComponent implements OnInit {
     this.editingPerson = person;
     this.form = {
       name: person.name,
-      document: person.document ?? '',
+      document: normalizeDocument(person.document),
       email: person.email ?? '',
-      phone: person.phone ?? '',
+      phone: normalizePhone(person.phone),
       type: person.type,
       active: person.active ?? true,
     };
@@ -95,7 +100,7 @@ export class PessoasComponent implements OnInit {
       await this.api.request(
         this.editingPerson ? 'PUT' : 'POST',
         '/pessoas' + (this.editingPerson ? '/' + this.editingPerson.id : ''),
-        this.form,
+        { ...this.form, document: normalizeDocument(this.form.document), phone: normalizePhone(this.form.phone) },
       );
       this.closeModal();
       await this.api.loadRegistry();

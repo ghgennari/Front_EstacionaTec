@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
+import { PersonalMaskDirective } from './core/directives/personal-mask.directive';
 import { MonitoramentoComponent } from './pages/monitoramento/monitoramento.component';
 import { ImagensComponent } from './pages/imagens/imagens.component';
 
@@ -38,7 +39,7 @@ import { VeiculosComponent } from './pages/veiculos/veiculos.component';
     UsuariosComponent,
     VeiculosComponent,
   ],
-  imports: [BrowserModule, FormsModule, AppRoutingModule],
+  imports: [BrowserModule, FormsModule, AppRoutingModule, PersonalMaskDirective],
   providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],
   bootstrap: [App],
 })

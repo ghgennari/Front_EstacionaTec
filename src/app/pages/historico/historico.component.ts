@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { formatDocument, formatPhone, normalizeDocument } from '../../core/utils/personal-data';
 import {
   ParkingRegistryService,
   HistoryRecord,
@@ -14,6 +15,8 @@ export class HistoricoComponent implements OnInit, OnDestroy {
   private readonly api = inject(ParkingRegistryService);
   private readonly cdr = inject(ChangeDetectorRef);
   canViewContact(): boolean { return this.api.isAdmin(); }
+  readonly formatDocument = formatDocument;
+  readonly formatPhone = formatPhone;
   search = '';
   error = '';
   records: HistoryRecord[] = [];
@@ -35,9 +38,9 @@ export class HistoricoComponent implements OnInit, OnDestroy {
     try {
       const people = await this.api.request<RegisteredPerson[]>('GET', '/pessoas');
       if (request !== this.ownerRequest) return;
-      const document = record.ownerDocument.replace(/[^a-zA-Z0-9]/g, '');
+      const document = normalizeDocument(record.ownerDocument);
       this.owner = people.find((person) =>
-        person.document?.replace(/[^a-zA-Z0-9]/g, '') === document,
+        normalizeDocument(person.document) === document,
       ) ?? null;
     } catch (error) {
       if (request === this.ownerRequest) this.ownerError = this.api.error(error);

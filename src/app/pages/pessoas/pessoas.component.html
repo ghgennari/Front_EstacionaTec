@@ -24,7 +24,7 @@
             </div>
             <div>
               <dt>CPF/Documento</dt>
-              <dd>{{ person.document }}</dd>
+              <dd>{{ formatDocument(person.document) }}</dd>
             </div>
             <div>
               <dt>Tipo</dt>
@@ -36,7 +36,7 @@
             </div>
             <div>
               <dt>Telefone</dt>
-              <dd>{{ person.phone || 'Não informado' }}</dd>
+              <dd>{{ formatPhone(person.phone) || 'Não informado' }}</dd>
             </div>
           </dl>
         } @else {
@@ -50,7 +50,7 @@
       <input
         class="input"
         [(ngModel)]="search"
-        placeholder="Buscar por nome, documento ou e-mail..."
+        placeholder="Buscar por nome, CPF/documento, telefone ou e-mail..."
       />
     </div>
     <div class="table-wrap">
@@ -70,9 +70,9 @@
               <td>
                 <strong>{{ p.name }}</strong>
               </td>
-              <td>{{ p.document }}</td>
+              <td>{{ formatDocument(p.document) }}</td>
               <td>
-                {{ p.email }}<br /><span class="muted">{{ p.phone }}</span>
+                {{ p.email }}<br /><span class="muted">{{ formatPhone(p.phone) }}</span>
               </td>
               <td>
                 <span class="badge badge-blue">{{ p.type }}</span>
@@ -121,7 +121,7 @@
         <div class="grid grid-2">
           <div class="field">
             <label>CPF/Documento *</label
-            ><input class="input" name="document" [(ngModel)]="form.document" />
+            ><input class="input" name="document" appPersonalMask="document" [(ngModel)]="form.document" />
           </div>
           <div class="field">
             <label>Tipo</label
@@ -136,7 +136,7 @@
             <label>E-mail</label><input class="input" name="email" [(ngModel)]="form.email" />
           </div>
           <div class="field">
-            <label>Telefone</label><input class="input" name="phone" [(ngModel)]="form.phone" />
+            <label>Telefone</label><input class="input" name="phone" type="tel" appPersonalMask="phone" [(ngModel)]="form.phone" />
           </div>
         </div>
         @if (error) {
@@ -161,7 +161,7 @@
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-person-title">
       <div class="card-header"><h3 id="delete-person-title">Excluir pessoa</h3></div>
       <div class="card-body">
-        <p>Deseja excluir o cadastro de {{ person.name }} ({{ person.document }})?</p>
+        <p>Deseja excluir o cadastro de {{ person.name }} ({{ formatDocument(person.document) }})?</p>
         @if (deleteError) {
           <p role="alert">{{ deleteError }}</p>
         }

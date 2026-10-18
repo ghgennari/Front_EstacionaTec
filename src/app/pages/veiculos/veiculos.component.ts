@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { formatDocument } from '../../core/utils/personal-data';
 import {
   ParkingRegistryService,
   RegisteredVehicle,
@@ -11,6 +12,7 @@ import {
 export class VeiculosComponent implements OnInit {
   private readonly api = inject(ParkingRegistryService);
   private readonly cdr = inject(ChangeDetectorRef);
+  readonly formatDocument = formatDocument;
   search = '';
   modal = false;
   busy = false;

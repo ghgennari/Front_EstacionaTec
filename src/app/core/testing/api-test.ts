@@ -4,6 +4,7 @@ import { OcrService } from '../services/ocr.service';
 import { TestBed } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PersonalMaskDirective } from '../directives/personal-mask.directive';
 import { RouterModule, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
@@ -21,7 +22,7 @@ export function create<T>(component: Type<T>, role = 'Administrador') {
   }));
   TestBed.configureTestingModule({
     declarations: [component],
-    imports: [CommonModule, FormsModule, RouterModule],
+    imports: [CommonModule, FormsModule, RouterModule, PersonalMaskDirective],
     providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
       { provide: OcrService, useValue: { states: EMPTY } }],
   });
