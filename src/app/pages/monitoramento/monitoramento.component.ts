@@ -32,8 +32,6 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
   refreshing = false;
   connecting = false;
   capturing = false;
-  diagnosing = false;
-  diagnosticMessage = '';
   source: 'WEBCAM' | 'IP' | null = null;
   private selectedSource: 'WEBCAM' | 'IP' | null = null;
   private webcamOcrTimer?: ReturnType<typeof setTimeout>;
@@ -90,7 +88,7 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
   }
 
   async selectSource(value: string): Promise<void> {
-    if (!this.isAdmin || (value !== 'IP' && value !== 'WEBCAM') || this.capturing || this.diagnosing) return;
+    if (!this.isAdmin || (value !== 'IP' && value !== 'WEBCAM') || this.capturing) return;
     this.selectedSource = value;
     this.stopWebcam();
     this.previewGeneration++;
@@ -98,7 +96,6 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
     this.clearPreview();
     this.source = value;
     this.ocrState = null;
-    this.diagnosticMessage = '';
     this.message = value === 'WEBCAM' ? 'Ative a webcam e permita o acesso no navegador.' : 'Conectando à câmera IP...';
     this.syncOcr();
     this.cdr.markForCheck();
@@ -120,7 +117,7 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
 
   private async readWebcam(generation: number): Promise<void> {
     if (this.destroyed || generation !== this.generation || this.source !== 'WEBCAM' || !this.stream) return;
-    if (document.hidden || this.webcamOcrBusy || this.diagnosing) {
+    if (document.hidden || this.webcamOcrBusy) {
       this.webcamOcrTimer = setTimeout(() => void this.readWebcam(generation), 1500);
       return;
     }
@@ -262,26 +259,6 @@ export class MonitoramentoComponent implements OnInit, OnDestroy {
     );
   }
 
-  async diagnoseOcr(): Promise<void> {
-    if (this.diagnosing || this.destroyed) return;
-    this.diagnosing = true;
-    this.diagnosticMessage = 'Testando leitura do quadro atual...';
-    try {
-      let body: FormData | undefined;
-      if (this.source === 'WEBCAM') {
-        body = new FormData();
-        body.append('file', await this.webcamFrame(), 'webcam.jpg');
-      }
-      const result = await this.api.request<{ message: string; elapsedMs: number }>(
-        'POST', this.source === 'WEBCAM' ? '/camera/ocr/testar' : '/camera/ocr/diagnosticar', body);
-      this.diagnosticMessage = `${result.message} Tempo: ${result.elapsedMs} ms.`;
-    } catch (error) {
-      this.diagnosticMessage = this.api.error(error);
-    } finally {
-      this.diagnosing = false;
-      this.cdr.markForCheck();
-    }
-  }
   async capture(): Promise<void> {
     if (this.capturing || this.destroyed) return;
     this.capturing = true;

@@ -2,7 +2,7 @@ import { create } from '../../core/testing/api-test';
 import { MonitoramentoComponent } from './monitoramento.component';
 import { vi } from 'vitest';
 
-describe('Previa economica e diagnostico OCR', () => {
+describe('Previa economica', () => {
   afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
   it('limita a previa a um quadro por segundo e pausa downloads em aba oculta', async () => {
@@ -31,16 +31,4 @@ describe('Previa economica e diagnostico OCR', () => {
     http.verify();
   });
 
-  it('exibe placa, confianca e tempo retornados pelo teste do quadro atual', async () => {
-    const { fixture, component, http } = create(MonitoramentoComponent);
-    const pending = component.diagnoseOcr();
-    http.expectOne('/api/camera/ocr/diagnosticar').flush({ message: 'ABC1234 (94%)', elapsedMs: 350 });
-    await pending;
-    expect(component.diagnosticMessage).toContain('ABC1234 (94%)');
-    expect(component.diagnosticMessage).toContain('350 ms');
-    expect(component.diagnosing).toBe(false);
-    http.expectNone('/api/movimentacoes/entrada');
-    fixture.destroy();
-    http.verify();
-  });
 });

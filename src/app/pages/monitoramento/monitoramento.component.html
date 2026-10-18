@@ -3,7 +3,7 @@
     <div class="card camera-choice">
       <label for="camera-source">Câmera utilizada nesta tela</label>
       <select id="camera-source" [ngModel]="source" (ngModelChange)="selectSource($event)"
-        [disabled]="capturing || diagnosing">
+        [disabled]="capturing">
         <option [ngValue]="null" disabled>Selecione a câmera</option>
         <option value="IP">Câmera IP</option>
         <option value="WEBCAM">Câmera deste computador (webcam)</option>
@@ -97,6 +97,4 @@
 
 @if (source === 'IP' || (source === 'WEBCAM' && isAdmin)) {
   <p>Entradas automáticas para veículos cadastrados e autorizados. Na webcam, mantenha esta tela aberta e visível; na IP, também é possível acompanhar por Registrar Entrada.</p>
-  <button type="button" (click)="diagnoseOcr()" [disabled]="diagnosing || (source === 'WEBCAM' && !stream)">Testar leitura OCR</button>
-  <p role="status" aria-live="polite">{{ diagnosticMessage }}</p>
 }

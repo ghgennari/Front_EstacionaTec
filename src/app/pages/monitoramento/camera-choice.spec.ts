@@ -80,17 +80,4 @@ describe('Escolha administrativa da camera', () => {
     fixture.destroy();
     http.verify();
   });
-  it('diagnostico da webcam envia a foto local em vez de consultar a IP', async () => {
-    const { component, fixture, http } = setup();
-    await component.selectSource('WEBCAM');
-    const pending = component.diagnoseOcr();
-    const req = await vi.waitFor(() => http.expectOne('/api/camera/ocr/testar'));
-    expect(req.request.body.get('file').name).toBe('webcam.jpg');
-    req.flush({ message: 'ABC1234 (95%)', elapsedMs: 120 });
-    await pending;
-    http.expectNone('/api/camera/ocr/diagnosticar');
-    expect(component.diagnosticMessage).toContain('ABC1234');
-    fixture.destroy();
-    http.verify();
-  });
 });
