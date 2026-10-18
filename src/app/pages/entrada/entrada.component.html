@@ -12,11 +12,11 @@
 
     <p role="status" aria-live="polite">{{ ocrMessage }}</p>
     @if (detectedPlate) {
-      <p>Placa na câmera: <strong>{{ detectedPlate }}</strong></p>
+      <p>Placa na câmera: <strong>{{ detectedPlate | plateFormat }}</strong></p>
     }
     <form (ngSubmit)="submit()" novalidate>
       <label for="entry-plate">Placa do Veículo</label>
-      <input
+      <input appDisplayFormat="plate"
         id="entry-plate"
         [disabled]="busy || visitorOpen"
         name="plate"
@@ -61,19 +61,19 @@
         <dl>
           <div>
             <dt>Placa:</dt>
-            <dd>{{ result.plate }}</dd>
+            <dd><strong>{{ result.plate | plateFormat }}</strong></dd>
           </div>
           <div>
             <dt>Responsável:</dt>
-            <dd>{{ result.owner }}</dd>
+            <dd><strong>{{ result.owner | titlecase }}</strong></dd>
           </div>
           <div>
             <dt>Tipo:</dt>
-            <dd>{{ result.category }}</dd>
+            <dd>{{ result.category | titlecase }}</dd>
           </div>
           <div>
             <dt>Modelo:</dt>
-            <dd>{{ result.model }}</dd>
+            <dd>{{ result.model | titlecase }}</dd>
           </div>
           <div class="entry-time">
             <dt>Horário:</dt>
@@ -106,14 +106,14 @@
   <p id="visitor-description">Informe o responsável e o modelo para registrar esta visita. Os dados ficarão no histórico e na lista de veículos presentes até a saída.</p>
   <form (ngSubmit)="confirmVisitor()" novalidate>
     <label for="visitor-plate">Placa do veículo</label>
-    <input id="visitor-plate" class="visitor-input visitor-plate" [value]="visitorPlate" readonly />
+    <input id="visitor-plate" class="visitor-input visitor-plate" [value]="visitorPlate | plateFormat" readonly />
 
     <label for="visitor-responsible">Nome do responsável</label>
-    <input id="visitor-responsible" class="visitor-input" name="responsibleName"
+    <input appDisplayFormat="title" id="visitor-responsible" class="identity-text visitor-input" name="responsibleName"
       [(ngModel)]="responsibleName" maxlength="150" required autofocus [disabled]="busy" />
 
     <label for="visitor-model">Modelo do carro</label>
-    <input id="visitor-model" class="visitor-input" name="visitorModel"
+    <input appDisplayFormat="title" id="visitor-model" class="visitor-input" name="visitorModel"
       [(ngModel)]="visitorModel" maxlength="50" placeholder="Ex.: Fiat Uno" required [disabled]="busy" />
 
     @if (visitorError) {

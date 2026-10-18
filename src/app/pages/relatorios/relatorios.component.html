@@ -7,7 +7,7 @@
     @for (report of recentReports; track report.name) {
       <div class="card-header toolbar">
         <div>
-          <strong>{{ report.name }}</strong>
+          <strong>{{ report.name | titlecase }}</strong>
           <p>
             Gerado em {{ report.date }} • {{ report.size }} •
             {{ report.available ? 'CSV' : 'Demonstração sem arquivo' }}
@@ -40,7 +40,7 @@
       </div>
       <div class="grid grid-2">
         <div class="field">
-          <label>Placa (opcional)</label><input class="input" name="plate" [(ngModel)]="plate" />
+          <label>Placa (opcional)</label><input maxlength="8" appDisplayFormat="plate" class="input" name="plate" [(ngModel)]="plate" />
         </div>
         <div class="field">
           <label>Operador ID (opcional)</label

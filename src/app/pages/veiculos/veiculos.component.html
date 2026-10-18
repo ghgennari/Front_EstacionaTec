@@ -36,16 +36,16 @@
             <tr>
               <td>{{ v.id }}</td>
               <td>
-                <strong>{{ v.plate }}</strong>
+                <strong>{{ v.plate | plateFormat }}</strong>
               </td>
-              <td>{{ v.model }}</td>
-              <td>{{ v.color }}</td>
-              <td>{{ v.owner }}</td>
+              <td>{{ v.model | titlecase }}</td>
+              <td>{{ v.color | titlecase }}</td>
+              <td><strong>{{ v.owner | titlecase }}</strong></td>
               <td>
-                <span class="badge">{{ category(v) }}</span>
+                <span class="badge">{{ category(v) | titlecase }}</span>
               </td>
               <td>
-                <span class="badge badge-blue">{{ v.type }}</span>
+                <span class="badge badge-blue">{{ v.type | titlecase }}</span>
               </td>
               @if (canManage) {
               <td>
@@ -95,7 +95,7 @@
       <form class="card-body grid" (ngSubmit)="save()">
         <div class="grid grid-2">
           <div class="field">
-            <label>Placa *</label><input class="input" name="plate" [(ngModel)]="form.plate" />
+            <label>Placa *</label><input maxlength="8" appDisplayFormat="plate" class="input" name="plate" [(ngModel)]="form.plate" />
           </div>
           <div class="field">
             <label>Tipo</label
@@ -106,23 +106,23 @@
             </select>
           </div>
           <div class="field">
-            <label>Modelo</label><input class="input" name="model" [(ngModel)]="form.model" />
+            <label>Modelo</label><input appDisplayFormat="title" class="input" name="model" [(ngModel)]="form.model" />
           </div>
           <div class="field">
-            <label>Cor</label><input class="input" name="color" [(ngModel)]="form.color" />
+            <label>Cor</label><input appDisplayFormat="title" class="input" name="color" [(ngModel)]="form.color" />
           </div>
         </div>
         <div class="field">
           <label>Proprietário *</label>
-          <select class="input" name="ownerId" [(ngModel)]="form.ownerId">
+          <select class="input" name="ownerId" style="font-weight: 700" [(ngModel)]="form.ownerId">
             <option [ngValue]="null">Selecione uma pessoa</option>
             @for (person of people; track person.id) {
               <option [ngValue]="person.id">
-                {{ person.name }} — {{ formatDocument(person.document) || person.email }}
+                {{ person.name | titlecase }} — {{ formatDocument(person.document) || person.email }}
               </option>
             }
           </select>
-          <label>Marca</label><input class="input" name="brand" [(ngModel)]="form.brand" />
+          <label>Marca</label><input appDisplayFormat="title" class="input" name="brand" [(ngModel)]="form.brand" />
           <label
             ><input type="checkbox" name="authorized" [(ngModel)]="form.authorized" /> Acesso
             autorizado</label
@@ -144,7 +144,7 @@
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
       <div class="card-header"><h3 id="delete-title">Excluir veículo</h3></div>
       <div class="card-body">
-        <p>Deseja excluir o veículo {{ vehicle.plate }} de {{ vehicle.owner }}?</p>
+        <p>Deseja excluir o veículo <strong>{{ vehicle.plate | plateFormat }}</strong> de <strong>{{ vehicle.owner | titlecase }}</strong>?</p>
         @if (error) {
           <p role="alert">{{ error }}</p>
         }

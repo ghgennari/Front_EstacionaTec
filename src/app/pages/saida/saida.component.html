@@ -25,7 +25,7 @@
   @if (confirmed) {
     <div class="card card-body">
       <span class="badge badge-success"
-        >✓ Saída do veículo {{ confirmed }} registrada com sucesso.</span
+        >✓ Saída do veículo <strong>{{ confirmed | plateFormat }}</strong> registrada com sucesso.</span
       >
     </div>
   }
@@ -47,11 +47,11 @@
           @for (v of filtered; track v.plate) {
             <tr>
               <td>
-                <strong>{{ v.plate }}</strong>
+                <strong>{{ v.plate | plateFormat }}</strong>
               </td>
-              <td>{{ v.owner }}</td>
-              <td>{{ v.brand }}</td>
-              <td>{{ v.model }}</td>
+              <td><strong>{{ v.owner | titlecase }}</strong></td>
+              <td>{{ v.brand | titlecase }}</td>
+              <td>{{ v.model | titlecase }}</td>
               <td>{{ v.entryTime }}</td>
               <td>
                 <button class="btn btn-danger" (click)="exit(v.plate)" [disabled]="busy">

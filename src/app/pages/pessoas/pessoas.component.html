@@ -20,7 +20,7 @@
           <dl class="grid grid-2">
             <div>
               <dt>Nome</dt>
-              <dd>{{ person.name }}</dd>
+              <dd><strong>{{ person.name | titlecase }}</strong></dd>
             </div>
             <div>
               <dt>CPF/Documento</dt>
@@ -28,7 +28,7 @@
             </div>
             <div>
               <dt>Tipo</dt>
-              <dd>{{ person.type }}</dd>
+              <dd>{{ person.type | titlecase }}</dd>
             </div>
             <div>
               <dt>E-mail</dt>
@@ -68,14 +68,14 @@
           @for (p of filtered; track p.id) {
             <tr>
               <td>
-                <strong>{{ p.name }}</strong>
+                <strong>{{ p.name | titlecase }}</strong>
               </td>
               <td>{{ formatDocument(p.document) }}</td>
               <td>
                 {{ p.email }}<br /><span class="muted">{{ formatPhone(p.phone) }}</span>
               </td>
               <td>
-                <span class="badge badge-blue">{{ p.type }}</span>
+                <span class="badge badge-blue">{{ p.type | titlecase }}</span>
               </td>
               <td>
                 <button
@@ -116,7 +116,7 @@
       </div>
       <form class="card-body grid" (ngSubmit)="save()">
         <div class="field">
-          <label>Nome completo *</label><input class="input" name="name" [(ngModel)]="form.name" />
+          <label>Nome completo *</label><input appDisplayFormat="title" class="identity-text input" name="name" [(ngModel)]="form.name" />
         </div>
         <div class="grid grid-2">
           <div class="field">
@@ -161,7 +161,7 @@
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-person-title">
       <div class="card-header"><h3 id="delete-person-title">Excluir pessoa</h3></div>
       <div class="card-body">
-        <p>Deseja excluir o cadastro de {{ person.name }} ({{ formatDocument(person.document) }})?</p>
+        <p>Deseja excluir o cadastro de <strong>{{ person.name | titlecase }}</strong> ({{ formatDocument(person.document) }})?</p>
         @if (deleteError) {
           <p role="alert">{{ deleteError }}</p>
         }

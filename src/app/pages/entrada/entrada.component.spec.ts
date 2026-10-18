@@ -23,7 +23,7 @@ describe('Entrada integrada', () => {
     fixture.detectChanges();
     expect(dialog.open).toBe(true);
     const plate = fixture.nativeElement.querySelector('#visitor-plate') as HTMLInputElement;
-    expect(plate.value).toBe('VIS1234');
+    expect(plate.value).toBe('VIS-1234');
     expect(plate.readOnly).toBe(true);
     expect(component.entry).toBeNull();
     await component.confirmVisitor();

@@ -30,11 +30,11 @@
           @for (v of vehicles; track v[0]) {
             <tr>
               <td>
-                <strong>{{ v[0] }}</strong>
+                <strong>{{ v[0] | plateFormat }}</strong>
               </td>
-              <td>{{ v[1] }}</td>
+              <td><strong>{{ v[1] | titlecase }}</strong></td>
               <td>
-                <span class="badge">{{ v[2] }}</span>
+                <span class="badge">{{ v[2] | titlecase }}</span>
               </td>
               <td>{{ v[3] }}</td>
               <td><span class="badge badge-success">● Ativo</span></td>

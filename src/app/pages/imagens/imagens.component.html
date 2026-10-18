@@ -4,7 +4,7 @@
     <div class="grid grid-4">
       <div class="field">
         <label for="capture-plate">Placa</label
-        ><input
+        ><input maxlength="8" appDisplayFormat="plate"
           id="capture-plate"
           class="input"
           placeholder="ABC-1234"
@@ -74,16 +74,16 @@
             <tr>
               <td><span class="thumbnail" aria-label="Arquivo de imagem">▧</span></td>
               <td>
-                <strong>{{ image.plate }}</strong>
+                <strong>{{ image.plate | plateFormat }}</strong>
               </td>
-              <td>{{ image.owner }}</td>
+              <td><strong>{{ image.owner | titlecase }}</strong></td>
               <td>{{ dateTime(image) }}</td>
               <td>
                 <span
                   class="badge"
                   [class.badge-blue]="image.type === 'Entrada'"
                   [class.badge-orange]="image.type === 'Saída'"
-                  >{{ image.type }}</span
+                  >{{ image.type | titlecase }}</span
                 >
               </td>
               <td>
@@ -91,7 +91,7 @@
                   class="badge"
                   [class.badge-success]="image.status === 'Autorizado'"
                   [class.denied]="image.status === 'Negado'"
-                  >{{ image.status }}</span
+                  >{{ image.status | titlecase }}</span
                 >
               </td>
               <td class="muted">{{ image.fileName }}</td>
@@ -175,11 +175,11 @@
           <dl class="grid grid-2">
             <div>
               <dt>Placa</dt>
-              <dd>{{ image.plate }}</dd>
+              <dd><strong>{{ image.plate | plateFormat }}</strong></dd>
             </div>
             <div>
               <dt>Proprietário</dt>
-              <dd>{{ image.owner }}</dd>
+              <dd><strong>{{ image.owner | titlecase }}</strong></dd>
             </div>
             <div>
               <dt>Data/Hora</dt>
@@ -187,11 +187,11 @@
             </div>
             <div>
               <dt>Tipo de Acesso</dt>
-              <dd>{{ image.type }}</dd>
+              <dd>{{ image.type | titlecase }}</dd>
             </div>
             <div>
               <dt>Status</dt>
-              <dd>{{ image.status }}</dd>
+              <dd>{{ image.status | titlecase }}</dd>
             </div>
             <div>
               <dt>Caminho do Arquivo</dt>

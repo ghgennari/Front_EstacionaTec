@@ -35,10 +35,10 @@
           @for (r of filtered; track r.id) {
             <tr>
               <td>
-                <strong>{{ r.plate }}</strong>
+                <strong>{{ r.plate | plateFormat }}</strong>
               </td>
-              <td>{{ r.model || 'Não informado' }}</td>
-              <td>{{ r.owner }}</td>
+              <td>{{ r.model || 'Não informado' | titlecase }}</td>
+              <td><strong>{{ r.owner | titlecase }}</strong></td>
               <td>{{ r.entry | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td>{{ r.exit | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td>
@@ -75,11 +75,11 @@
     <div class="card-body">
       <p class="muted">Dados registrados neste acesso.</p>
       <dl class="grid grid-2 owner-details">
-        <div><dt>Nome / responsável</dt><dd>{{ record.owner }}</dd></div>
+        <div><dt>Nome / responsável</dt><dd><strong>{{ record.owner | titlecase }}</strong></dd></div>
         <div><dt>CPF/Documento</dt><dd>{{ formatDocument(record.ownerDocument) || 'Não informado' }}</dd></div>
-        <div><dt>Tipo</dt><dd>{{ record.category || 'Não informado' }}</dd></div>
-        <div><dt>Placa</dt><dd>{{ record.plate }}</dd></div>
-        <div><dt>Modelo</dt><dd>{{ record.model || 'Não informado' }}</dd></div>
+        <div><dt>Tipo</dt><dd>{{ record.category || 'Não informado' | titlecase }}</dd></div>
+        <div><dt>Placa</dt><dd><strong>{{ record.plate | plateFormat }}</strong></dd></div>
+        <div><dt>Modelo</dt><dd>{{ record.model || 'Não informado' | titlecase }}</dd></div>
       </dl>
       @if (ownerLoading) {
         <p role="status">Carregando contato do proprietário...</p>

@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild,
 import { formatDocument, formatPhone, normalizeDocument } from '../../core/utils/personal-data';
 import {
   ParkingRegistryService,
+  normalizePlate,
   HistoryRecord,
   RegisteredPerson,
 } from '../../core/services/parking-registry.service';
@@ -69,7 +70,8 @@ export class HistoricoComponent implements OnInit, OnDestroy {
     return this.records.filter(
       (r) =>
         !!r.exit &&
-        [r.plate, r.owner].join(' ').toLowerCase().includes(this.search.trim().toLowerCase()),
+        ([r.plate, r.owner].join(' ').toLowerCase().includes(this.search.trim().toLowerCase())
+          || normalizePlate(r.plate).includes(normalizePlate(this.search))),
     );
   }
   async ngOnInit(): Promise<void> {

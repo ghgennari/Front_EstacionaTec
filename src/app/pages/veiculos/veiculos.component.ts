@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { formatDocument } from '../../core/utils/personal-data';
 import {
   ParkingRegistryService,
+  normalizePlate,
   RegisteredVehicle,
 } from '../../core/services/parking-registry.service';
 @Component({
@@ -31,7 +32,8 @@ export class VeiculosComponent implements OnInit {
   }
   get filtered() {
     return this.vehicles.filter((v) =>
-      Object.values(v).join(' ').toLowerCase().includes(this.search.toLowerCase()),
+      Object.values(v).join(' ').toLowerCase().includes(this.search.toLowerCase())
+      || normalizePlate(v.plate).includes(normalizePlate(this.search)),
     );
   }
   private emptyForm() {

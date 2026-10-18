@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
 import {
   ParkingRegistryService,
+  normalizePlate,
   CapturedImage,
 } from '../../core/services/parking-registry.service';
 
@@ -59,7 +60,7 @@ export class ImagensComponent implements OnInit, OnDestroy {
   get filtered(): CapturedImage[] {
     return this.images.filter(
       (image) =>
-        (image.plate ?? '').toLowerCase().includes(this.searchPlate.trim().toLowerCase()) &&
+        normalizePlate(image.plate ?? '').includes(normalizePlate(this.searchPlate)) &&
         (!this.dateFilter || image.date === this.dateFilter) &&
         (!this.accessType || image.type === this.accessType) &&
         (!this.accessStatus || image.status === this.accessStatus),

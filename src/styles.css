@@ -225,3 +225,6 @@ tbody tr:hover {
     padding: 12px;
   }
 }
+
+/* Nomes e placas recebem o mesmo destaque em listas e formulários. */
+.identity-text, input[appDisplayFormat="plate"], .visitor-plate { font-weight: 700; }

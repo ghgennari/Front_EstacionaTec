@@ -88,7 +88,7 @@
     <div role="status" aria-live="polite">
       <p>{{ ocr.message }}</p>
       @if (ocr.plate) {
-        <p>Placa identificada: <strong>{{ ocr.plate }}</strong></p>
+        <p>Placa identificada: <strong>{{ ocr.plate | plateFormat }}</strong></p>
         <a class="btn btn-primary" routerLink="/entrada">Conferir entrada</a>
       }
     </div>
