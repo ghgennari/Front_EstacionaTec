@@ -124,7 +124,7 @@ export class ParkingRegistryService {
         }),
       );
     } catch (error) {
-      if (error instanceof HttpErrorResponse && error.status === 401 && path !== '/auth/login') {
+      if (error instanceof HttpErrorResponse && error.status === 401 && !['/auth/login', '/auth/concluir-senha'].includes(path)) {
         this.clearSession();
         void this.router.navigate(['/login']);
       }
@@ -141,15 +141,21 @@ export class ParkingRegistryService {
     return error instanceof Error ? error.message : 'Não foi possível concluir a operação.';
   }
 
-  async login(email: string, password: string): Promise<void> {
-    const result = await this.request<{ token: string; user: SystemUser }>('POST', '/auth/login', {
+  async login(email: string, password: string): Promise<string | null> {
+    const result = await this.request<{ token: string; user: SystemUser; passwordChangeRequired?: boolean; resetToken?: string }>('POST', '/auth/login', {
       email,
       password,
     });
+    this.clearSession();
+    if (result.passwordChangeRequired) {
+      if (!result.resetToken) throw new Error('Não foi possível iniciar a troca de senha.');
+      return result.resetToken;
+    }
     this.token = result.token;
     this.user.set(result.user);
     sessionStorage.setItem('estacionatec-token', result.token);
     sessionStorage.setItem('estacionatec-user', JSON.stringify(result.user));
+    return null;
   }
 
   async logout(): Promise<void> {
@@ -161,7 +167,7 @@ export class ParkingRegistryService {
     }
   }
 
-  private clearSession(): void {
+  clearSession(): void {
     this.token = '';
     this.user.set(null);
     this.peopleState.set([]);

@@ -56,6 +56,9 @@
                 >
                   Desativar
                 </button>
+                <button type="button" class="btn btn-secondary" (click)="requestReset(u)" [disabled]="u.status !== 'Ativo' || u.id === currentUserId">
+                  Redefinir senha
+                </button>
               </td>
             </tr>
           }
@@ -119,22 +122,14 @@
             <label>E-mail *</label
             ><input class="input" type="email" name="email" [(ngModel)]="form.email" />
           </div>
+          @if (!editingUser) {
           <div class="field">
-            <label for="user-password">{{ editingUser ? 'Nova senha' : 'Senha *' }}</label>
-            <input
-              id="user-password"
-              class="input"
-              type="password"
-              name="password"
-              autocomplete="new-password"
-              [(ngModel)]="form.password"
-              placeholder="Mínimo 6 caracteres"
-              [attr.aria-describedby]="editingUser ? 'user-password-help' : null"
-            />
-            @if (editingUser) {
-              <small id="user-password-help">Deixe em branco para manter a senha atual.</small>
-            }
+            <label for="user-password">Senha inicial *</label>
+            <input id="user-password" class="input" type="password" name="password" required maxlength="72"
+              autocomplete="new-password" [(ngModel)]="form.password" aria-describedby="user-password-help" />
+            <small id="user-password-help">{{ passwordHelp }} O usuário deverá trocá-la no primeiro acesso.</small>
           </div>
+          }
           <div class="field">
             <label>Nível de acesso</label
             ><select class="input" name="role" [(ngModel)]="form.role">
@@ -180,6 +175,32 @@
             Confirmar exclusão
           </button>
         </div>
+      </div>
+    </section>
+  </div>
+}
+
+@if (pendingReset; as user) {
+  <div class="modal-backdrop" (keydown.escape)="closeReset()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="reset-user-title">
+      <div class="card-header"><h3 id="reset-user-title">Redefinir senha</h3></div>
+      <div class="card-body grid">
+        @if (resetResult; as result) {
+          <p>Entregue esta senha temporária a <strong>{{ user.name | titlecase }}</strong> por um canal privado.</p>
+          <label for="temporary-password">Senha temporária de {{ user.username }}</label>
+          <input id="temporary-password" class="input" readonly [value]="result.temporaryPassword" />
+          <p>Válida até {{ result.expiresAt | date:'dd/MM/yyyy HH:mm' }}. No login, o usuário deverá escolher uma nova senha antes de acessar o sistema.</p>
+          <p>A senha será exibida somente nesta janela. Uma nova redefinição invalida a anterior.</p>
+          <div class="modal-actions"><button class="btn btn-primary" type="button" (click)="closeReset()">Concluir</button></div>
+        } @else {
+          <p>Gerar uma senha temporária para <strong>{{ user.name | titlecase }}</strong> ({{ user.username }})?</p>
+          <p>A senha atual e as sessões abertas serão invalidadas. A senha temporária valerá por 30 minutos.</p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" type="button" (click)="closeReset()" [disabled]="busy">Cancelar</button>
+            <button class="btn btn-primary" type="button" (click)="confirmReset()" [disabled]="busy">Gerar senha temporária</button>
+          </div>
+        }
+        @if (error) { <p role="alert">{{ error }}</p> }
       </div>
     </section>
   </div>

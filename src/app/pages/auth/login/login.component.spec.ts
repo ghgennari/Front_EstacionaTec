@@ -34,13 +34,13 @@ describe('Login', () => {
     http.verify();
   });
 
-  it('mantém apenas o formulário de login sem link de recuperação', () => {
+  it('orienta procurar um administrador sem recuperação pública', () => {
     const fixture = TestBed.createComponent(LoginComponent);
     fixture.detectChanges();
     const page = fixture.nativeElement as HTMLElement;
     expect(page.querySelector('form button[type="submit"]')?.textContent).toContain('Entrar');
     expect(page.querySelector('a')).toBeNull();
-    expect(page.textContent).not.toContain('Esqueceu a senha');
+    expect(page.textContent).toContain('Solicite uma senha temporária a um administrador');
   });
 
   it('apresenta a mensagem de excesso de tentativas e permite tentar depois', async () => {

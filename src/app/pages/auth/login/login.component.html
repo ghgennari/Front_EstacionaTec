@@ -4,6 +4,23 @@
       <img class="brand-logo" src="assets/Logo2.png" alt="Logo EstacionaTec" />
       <h1>EstacionaTec</h1>
       <p>Sistema de Controle de Acesso</p>
+      @if (message) { <p role="status">{{ message }}</p> }
+      @if (resetToken) {
+        <h2>Crie sua nova senha</h2>
+        <p>A troca é obrigatória para acessar o sistema.</p>
+        <form (ngSubmit)="completeReset()">
+          <div class="field"><label for="new-password">Nova senha</label>
+            <input id="new-password" class="input" name="newPassword" type="password" required maxlength="72"
+              autocomplete="new-password" [(ngModel)]="newPassword" aria-describedby="password-rules" /></div>
+          <p id="password-rules">{{ passwordHelp }}</p>
+          <div class="field"><label for="confirm-password">Confirmar nova senha</label>
+            <input id="confirm-password" class="input" name="confirmPassword" type="password" required maxlength="72"
+              autocomplete="new-password" [(ngModel)]="confirmPassword" /></div>
+          @if (error) { <p class="error" role="alert">{{ error }}</p> }
+          <button class="btn btn-primary" type="submit" [disabled]="busy">Salvar nova senha</button>
+          <button class="btn btn-secondary" type="button" (click)="cancelReset()" [disabled]="busy">Voltar ao login</button>
+        </form>
+      } @else {
       <form (ngSubmit)="login()">
         <div class="field">
           <label for="email">E-mail ou Usuário</label
@@ -33,8 +50,10 @@
         @if (error) {
           <p class="error">{{ error }}</p>
         }
-        <button class="btn btn-primary" type="submit">Entrar</button>
+        <button class="btn btn-primary" type="submit" [disabled]="busy">Entrar</button>
       </form>
+      <p>Esqueceu a senha? Solicite uma senha temporária a um administrador e use-a neste formulário.</p>
+      }
     </section>
   </div>
 </div>

@@ -1,4 +1,5 @@
-import { inject } from '@angular/core';
+import { passwordError, passwordHelp } from '../../core/utils/password';
+import { ChangeDetectorRef, inject } from '@angular/core';
 import { ParkingRegistryService } from '../../core/services/parking-registry.service';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,6 +14,39 @@ import { filter } from 'rxjs';
 })
 export class HeaderComponent {
   readonly api = inject(ParkingRegistryService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  passwordModal = false;
+  passwordBusy = false;
+  passwordError = '';
+  currentPassword = '';
+  newPassword = '';
+  confirmPassword = '';
+  readonly passwordHelp = passwordHelp;
+  openPassword(): void {
+    this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = ''; this.passwordError = '';
+    this.passwordModal = true;
+  }
+  closePassword(): void {
+    if (this.passwordBusy) return;
+    this.passwordModal = false;
+    this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = ''; this.passwordError = '';
+  }
+  async savePassword(): Promise<void> {
+    if (this.passwordBusy) return;
+    this.passwordError = !this.currentPassword ? 'Informe sua senha atual.' : passwordError(this.newPassword, this.confirmPassword);
+    if (this.passwordError) return;
+    this.passwordBusy = true;
+    try {
+      await this.api.request('POST', '/auth/senha', {
+        currentPassword: this.currentPassword, newPassword: this.newPassword, confirmPassword: this.confirmPassword,
+      });
+      this.api.clearSession();
+      this.passwordBusy = false;
+      this.closePassword();
+      await this.router.navigate(['/login'], { queryParams: { senhaAlterada: '1' } });
+    } catch (error) { this.passwordError = this.api.error(error); }
+    finally { this.passwordBusy = false; this.cdr.markForCheck(); }
+  }
   logout(): void {
     void this.api.logout().catch(() => {});
   }

@@ -20,6 +20,33 @@
         ><small>{{ api.user()?.role | titlecase }}</small>
       </div>
     </div>
+    <button class="btn btn-secondary" type="button" (click)="openPassword()" title="Alterar senha" aria-label="Alterar minha senha">⚙</button>
     <button class="logout" type="button" (click)="logout()">Sair</button>
   </div>
 </header>
+
+@if (passwordModal) {
+  <div class="modal-backdrop" (keydown.escape)="closePassword()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="change-password-title">
+      <div class="card-header"><h3 id="change-password-title">Alterar senha</h3></div>
+      <form class="card-body grid" (ngSubmit)="savePassword()">
+        <div class="field"><label for="current-password">Senha atual</label>
+          <input class="input" id="current-password" name="currentPassword" type="password" required maxlength="72"
+            autocomplete="current-password" [(ngModel)]="currentPassword" /></div>
+        <div class="field"><label for="own-new-password">Nova senha</label>
+          <input class="input" id="own-new-password" name="newPassword" type="password" required maxlength="72"
+            autocomplete="new-password" [(ngModel)]="newPassword" aria-describedby="own-password-rules" /></div>
+        <small id="own-password-rules">{{ passwordHelp }}</small>
+        <div class="field"><label for="own-confirm-password">Confirmar nova senha</label>
+          <input class="input" id="own-confirm-password" name="confirmPassword" type="password" required maxlength="72"
+            autocomplete="new-password" [(ngModel)]="confirmPassword" /></div>
+        <small>Após salvar, você entrará novamente com a nova senha. As sessões anteriores serão encerradas.</small>
+        @if (passwordError) { <p role="alert">{{ passwordError }}</p> }
+        <div class="modal-actions">
+          <button class="btn btn-secondary" type="button" (click)="closePassword()" [disabled]="passwordBusy">Cancelar</button>
+          <button class="btn btn-primary" type="submit" [disabled]="passwordBusy">Salvar</button>
+        </div>
+      </form>
+    </section>
+  </div>
+}

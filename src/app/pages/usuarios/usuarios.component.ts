@@ -1,3 +1,4 @@
+import { passwordError, passwordHelp } from '../../core/utils/password';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { normalizeDocument, normalizePhone, personalDataError, matchesPersonalData } from '../../core/utils/personal-data';
 import { ParkingRegistryService, SystemUser } from '../../core/services/parking-registry.service';
@@ -17,6 +18,22 @@ export class UsuariosComponent implements OnInit {
   error = '';
   users: SystemUser[] = [];
   form = this.emptyForm();
+  readonly passwordHelp = passwordHelp;
+  get currentUserId() { return this.api.user()?.id; }
+  pendingReset: SystemUser | null = null;
+  resetResult: { temporaryPassword: string; expiresAt: string } | null = null;
+  requestReset(user: SystemUser): void {
+    this.error = ''; this.pendingReset = user; this.resetResult = null;
+  }
+  closeReset(): void { if (!this.busy) { this.pendingReset = null; this.resetResult = null; this.error = ''; } }
+  async confirmReset(): Promise<void> {
+    if (!this.pendingReset || this.busy || this.resetResult) return;
+    this.busy = true; this.error = '';
+    try {
+      this.resetResult = await this.api.request('POST', '/usuarios/' + this.pendingReset.id + '/redefinir-senha');
+    } catch (error) { this.error = this.api.error(error); }
+    finally { this.busy = false; this.cdr.markForCheck(); }
+  }
   private emptyForm() {
     return { name: '', username: '', email: '', document: '', phone: '', role: 'Porteiro', status: 'Ativo', password: '' };
   }
@@ -74,7 +91,7 @@ export class UsuariosComponent implements OnInit {
   }
   async save(): Promise<void> {
     if (this.busy) return;
-    this.error = personalDataError(this.form.document, this.form.phone);
+    this.error = personalDataError(this.form.document, this.form.phone) || (!this.editingUser ? passwordError(this.form.password) : '');
     if (this.error) return;
     this.busy = true;
     this.error = '';
