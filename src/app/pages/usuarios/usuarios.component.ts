@@ -81,6 +81,7 @@ export class UsuariosComponent implements OnInit {
     try {
       await this.api.request('DELETE', '/usuarios/' + this.pendingDelete.id);
       this.pendingDelete = null;
+      this.closeModal();
       await this.ngOnInit();
     } catch (error) {
       this.error = this.api.error(error);

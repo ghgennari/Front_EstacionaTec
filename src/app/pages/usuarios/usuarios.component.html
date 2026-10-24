@@ -48,17 +48,6 @@
                 >
                   Editar
                 </button>
-                <button
-                  type="button"
-                  class="btn btn-danger"
-                  (click)="pendingDelete = u"
-                  [attr.aria-label]="'Desativar usuário ' + u.name"
-                >
-                  Desativar
-                </button>
-                <button type="button" class="btn btn-secondary" (click)="requestReset(u)" [disabled]="u.status !== 'Ativo' || u.id === currentUserId">
-                  Redefinir senha
-                </button>
               </td>
             </tr>
           }
@@ -78,7 +67,7 @@
     </article>
   </div>
 </div>
-@if (modal) {
+@if (modal && !pendingDelete && !pendingReset) {
   <div class="modal-backdrop">
     <section class="modal">
       <div class="card-header toolbar">
@@ -148,6 +137,15 @@
         @if (error) {
           <p role="alert">{{ error }}</p>
         }
+        @if (editingUser; as user) {
+          <div class="toolbar" aria-label="Ações da conta">
+            <button type="button" class="btn btn-secondary" (click)="requestReset(user)"
+              [disabled]="busy || user.status !== 'Ativo' || user.id === currentUserId">Redefinir senha</button>
+            <button type="button" class="btn btn-danger" (click)="error = ''; pendingDelete = user"
+              [disabled]="busy || user.status !== 'Ativo' || user.id === currentUserId">Desativar usuário</button>
+          </div>
+          <small>Essas ações usam o cadastro salvo. Para sua própria senha, use a engrenagem no cabeçalho.</small>
+        }
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
           <button class="btn btn-primary" [disabled]="busy">
@@ -167,12 +165,13 @@
       <div class="card-header"><h3 id="delete-user-title">Desativar usuário</h3></div>
       <div class="card-body">
         <p>Deseja desativar o usuário <strong>{{ user.name | titlecase }}</strong> ({{ user.username }})?</p>
+        @if (error) { <p role="alert">{{ error }}</p> }
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" (click)="pendingDelete = null">
+          <button type="button" class="btn btn-secondary" (click)="pendingDelete = null; error = ''" [disabled]="busy">
             Cancelar
           </button>
           <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="busy">
-            Confirmar exclusão
+            Confirmar desativação
           </button>
         </div>
       </div>
