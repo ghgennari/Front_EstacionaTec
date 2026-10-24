@@ -80,7 +80,9 @@ export class ImagensComponent implements OnInit, OnDestroy {
     this.page = Math.min(this.totalPages, Math.max(1, this.page + offset));
   }
   dateTime(image: CapturedImage): string {
-    return `${image.date.split('-').reverse().join('/')} ${image.time}`;
+    const time = image.time.split('.')[0];
+    const seconds = /^\d{2}:\d{2}$/.test(time) ? `${time}:00` : time;
+    return `${image.date.split('-').reverse().join('/')} ${seconds}`;
   }
   async download(image: CapturedImage): Promise<void> {
     if (!image.available) {
