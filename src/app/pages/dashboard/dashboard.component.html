@@ -22,7 +22,7 @@
             <th>Placa</th>
             <th>Proprietário</th>
             <th>Tipo</th>
-            <th>Hora Entrada</th>
+            <th>Data/Hora de Entrada</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -36,7 +36,7 @@
               <td>
                 <span class="badge">{{ v[2] | titlecase }}</span>
               </td>
-              <td>{{ v[3] }}</td>
+              <td>{{ v[3] | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
               <td><span class="badge badge-success">● Ativo</span></td>
             </tr>
           }

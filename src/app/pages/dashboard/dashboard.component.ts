@@ -41,7 +41,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         v.plate,
         v.owner,
         v.category,
-        new Date(v.entry).toLocaleTimeString('pt-BR'),
+        v.entry,
       ]);
       this.error = '';
     } catch (error) {
