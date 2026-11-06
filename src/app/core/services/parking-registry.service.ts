@@ -18,6 +18,8 @@ export interface RegisteredVehicle {
   model: string;
   color: string;
   ownerId: number;
+  ownerIds?: number[];
+  owners?: { id: number; name: string; category: string; active: boolean }[];
   owner: string;
   type: string;
   category: string;
@@ -191,8 +193,15 @@ export class ParkingRegistryService {
 
   syncPerson(person: RegisteredPerson): void {
     this.peopleState.update(people => people.map(p => p.id === person.id ? person : p));
-    this.vehiclesState.update(vehicles => vehicles.map(v => v.ownerId === person.id
-      ? { ...v, owner: person.name, category: person.type } : v));
+    this.vehiclesState.update(vehicles => vehicles.map(v => {
+      if (v.owners) {
+        const owners = v.owners.map(p => p.id === person.id
+          ? { ...p, name: person.name, category: person.type, active: person.active !== false } : p);
+        return { ...v, owners, owner: owners.map(p => p.name).join(' / '),
+          category: [...new Set(owners.map(p => p.category))].join(' / ') };
+      }
+      return v.ownerId === person.id ? { ...v, owner: person.name, category: person.type } : v;
+    }));
     const current = this.user();
     if (current && current.personId === person.id) {
       this.storeCurrentUser({ ...current, name: person.name, email: person.email,

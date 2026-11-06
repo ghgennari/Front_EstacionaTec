@@ -35,7 +35,7 @@ describe('Pessoa e usuário vinculados', () => {
   it('avisa quando uma API antiga ignora os novos campos em vez de mostrar sucesso', async () => {
     const {component,http}=create(UsuariosComponent);
     component.openCreate();
-    component.form={name:'Pessoa',username:'pessoa',email:'pessoa@example.test',document:'79126483015',phone:'11987654321',role:'Porteiro',status:'Ativo',password:'Senha123!'};
+    component.form={name:'Pessoa',username:'pessoa',email:'pessoa@example.test',document:'79126483015',phone:'11987654321',role:'Porteiro',status:'Ativo',password:'SenhaForte123!'};
     const pending=component.save();
     http.expectOne('/api/usuarios').flush({id:20,name:'Pessoa',username:'pessoa',email:'pessoa@example.test',role:'Porteiro',status:'Ativo'});
     await pending;

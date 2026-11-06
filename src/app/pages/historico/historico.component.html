@@ -92,7 +92,7 @@
           <div><dt>Telefone</dt><dd>{{ formatPhone(person.phone) || 'Não informado' }}</dd></div>
         </dl>
       } @else if (canViewContact() || !record.ownerDocument) {
-        <p class="muted">{{ record.ownerDocument ? 'Cadastro atual não encontrado.' : 'Acesso sem cadastro de pessoa vinculado.' }}</p>
+        <p class="muted">{{ record.ownerDocument ? 'Cadastro atual não encontrado.' : 'Sem CPF individual neste registro (visitante ou veículo compartilhado).' }}</p>
       }
     </div>
   }

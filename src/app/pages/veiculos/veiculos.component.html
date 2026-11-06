@@ -25,8 +25,8 @@
             <th>Placa</th>
             <th>Modelo</th>
             <th>Cor</th>
-            <th>Proprietário</th>
-            <th>Categoria do proprietário</th>
+            <th>Proprietários</th>
+            <th>Categorias</th>
             <th>Tipo</th>
             @if (canManage) { <th>Ações</th> }
           </tr>
@@ -113,15 +113,33 @@
           </div>
         </div>
         <div class="field">
-          <label>Proprietário *</label>
-          <select class="input" name="ownerId" style="font-weight: 700" [(ngModel)]="form.ownerId">
+          <label for="vehicle-owner">Proprietários *</label>
+          <select id="vehicle-owner" class="input" name="ownerId" style="font-weight: 700" [(ngModel)]="form.ownerId">
             <option [ngValue]="null">Selecione uma pessoa</option>
             @for (person of people; track person.id) {
-              <option [ngValue]="person.id">
+              <option [ngValue]="person.id" [disabled]="ownerSelected(person.id, form.ownerId)">
                 {{ person.name | titlecase }} — {{ formatDocument(person.document) || person.email }}
               </option>
             }
           </select>
+          @for (ownerId of form.additionalOwnerIds; track $index; let i = $index) {
+            <div class="toolbar">
+              <select class="input" [name]="'additionalOwner' + i" style="font-weight: 700"
+                [attr.aria-label]="'Proprietário ' + (i + 2)" [(ngModel)]="form.additionalOwnerIds[i]">
+                <option [ngValue]="null">Selecione outra pessoa</option>
+                @for (person of people; track person.id) {
+                  <option [ngValue]="person.id" [disabled]="ownerSelected(person.id, ownerId)">
+                    {{ person.name | titlecase }} — {{ formatDocument(person.document) || person.email }}
+                  </option>
+                }
+              </select>
+              <button type="button" class="btn btn-secondary" (click)="form.additionalOwnerIds.splice(i, 1)"
+                [attr.aria-label]="'Remover proprietário ' + (i + 2)">Remover</button>
+            </div>
+          }
+          <button type="button" class="btn btn-secondary" (click)="addOwner()"
+            [disabled]="form.additionalOwnerIds.length >= 19">＋ Adicionar proprietário</button>
+          <small>Selecione pessoas já cadastradas. A leitura da placa identifica o veículo, não o condutor.</small>
           <label>Marca</label><input appDisplayFormat="title" class="input" name="brand" [(ngModel)]="form.brand" />
           <label
             ><input type="checkbox" name="authorized" [(ngModel)]="form.authorized" /> Acesso

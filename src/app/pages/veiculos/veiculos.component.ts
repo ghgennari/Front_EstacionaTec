@@ -42,6 +42,7 @@ export class VeiculosComponent implements OnInit {
       model: '',
       color: '',
       ownerId: null as number | null,
+      additionalOwnerIds: [] as (number | null)[],
       type: 'Carro',
       brand: '',
       authorized: true,
@@ -73,6 +74,7 @@ export class VeiculosComponent implements OnInit {
       model: vehicle.model,
       color: vehicle.color,
       ownerId: vehicle.ownerId,
+      additionalOwnerIds: (vehicle.ownerIds ?? [vehicle.ownerId]).filter(id => id !== vehicle.ownerId),
       type: vehicle.type,
       brand: vehicle.brand ?? '',
       authorized: vehicle.authorized,
@@ -99,15 +101,27 @@ export class VeiculosComponent implements OnInit {
       this.cdr.markForCheck();
     }
   }
+  addOwner(): void {
+    if (this.form.additionalOwnerIds.length < 19) this.form.additionalOwnerIds.push(null);
+  }
+  ownerSelected(id: number | undefined, current: number | null): boolean {
+    return id !== current && [this.form.ownerId, ...this.form.additionalOwnerIds].includes(id ?? null);
+  }
   async save(): Promise<void> {
     if (!this.canManage || this.busy) return;
-    this.busy = true;
     this.error = '';
+    const { additionalOwnerIds, ...fields } = this.form;
+    const ownerIds = [fields.ownerId, ...additionalOwnerIds];
+    if (ownerIds.some(id => id === null) || new Set(ownerIds).size !== ownerIds.length) {
+      this.error = 'Selecione uma pessoa diferente para cada proprietário ou remova o campo vazio.';
+      return;
+    }
+    this.busy = true;
     try {
       await this.api.request(
         this.editingId === null ? 'POST' : 'PUT',
         '/veiculos' + (this.editingId === null ? '' : '/' + this.editingId),
-        this.form,
+        { ...fields, ownerIds },
       );
       this.closeModal();
       await this.api.loadRegistry();
